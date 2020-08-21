@@ -18,6 +18,11 @@ const (
 	itemCloseBlock // closing of a block (})
 	itemExpression // a series of statements
 	itemComment    // a comment
+	itemLeftDelim  // template opening delimiter
+	itemRightDelim // template closing delimiter
+	itemTemplateVar
+	itemString
+	itemNewLine
 )
 
 // Pos represents a byte position in the original input text from which
@@ -37,10 +42,22 @@ type item struct {
 	line int
 }
 
+func (i item) String() string {
+	switch {
+	case i.typ == itemEOF:
+		return "EOF"
+	case i.typ == itemError:
+		return i.val
+	}
+	return fmt.Sprintf("<%q>", i.val)
+}
+
 const eof = -1
 
 const (
 	spaceChars = " \t\r\n"
+	leftDelim  = "{{"
+	rightDelim = "}}"
 )
 
 // stateFn represents the state of the scanner as a function that returns the next state.
@@ -155,19 +172,142 @@ func (l *lexer) run() {
 }
 
 func lexText(l *lexer) stateFn {
-	switch r := l.next(); {
+	r := l.next()
+	switch {
 	case r == ';':
 		l.emit(itemTerminator)
 	case r == '{':
+		nextc := l.peek()
+		if nextc == '{' {
+			return lexTemplateVariable
+		}
+
 		l.emit(itemOpenBlock)
 	case r == '}':
 		l.emit(itemCloseBlock)
 	case r == '#':
 		return lexComment
+	case r == '\'' || r == '"':
+		l.backup()
+		return lexQuote
+	case isSpace(r):
+		return lexSpace
+	case isEndOfLine(r):
+		return lexNewlines
+	case r == eof:
+		return nil
+	default:
+		return lexStatement
 	}
-	return nil
+
+	// fmt.Printf("l.pos = %d, len(input)=%d\n", l.pos, len(l.input))
+	if l.pos == Pos(len(l.input)) {
+		fmt.Printf("EOF reached")
+		return nil
+	}
+
+	return lexText
 }
 
 func lexComment(l *lexer) stateFn {
+	i := strings.Index(l.input[l.pos:], "\n")
+	if i < 0 {
+		// EOF
+		l.pos = Pos(len(l.input))
+		l.emit(itemEOF)
+		return nil
+	}
+	l.pos += Pos(i)
+	l.emit(itemComment)
+	return lexNewlines
+}
+
+func lexNewlines(l *lexer) stateFn {
+	var r rune
+	for {
+		r = l.peek()
+		if !isEndOfLine(r) {
+			break
+		}
+		l.next()
+		// next increments the newline counter!
+	}
+	l.emit(itemNewLine)
+	return lexText
+}
+
+func lexSpace(l *lexer) stateFn {
+	var r rune
+	for {
+		r = l.peek()
+		if !isSpace(r) {
+			break
+		}
+		l.next()
+	}
+	l.emit(itemSpace)
+	return lexText
+}
+
+// must read until: end of line (\n), end of statement (;), space ( ), start of block ({) (not end of block!)
+// XXX yeah but what about quoted string and other things found in statements??
+func lexStatement(l *lexer) stateFn {
+Loop:
+	for {
+		switch r := l.next(); {
+		case r == '\n' || r == ';' || r == '{' || r == eof || r == ' ' || r == '\'' || r == '"':
+			break Loop
+		default:
+			// consume
+		}
+	}
+	l.backup()
+	l.emit(itemStatement)
+	return lexText
+}
+
+func lexQuote(l *lexer) stateFn {
+	// this can either be a single quote or a double quote
+	quoteChr := l.next()
+
+Loop:
+	for {
+		switch l.next() {
+		case '\\':
+			if r := l.next(); r != eof && r != '\n' {
+				break
+			}
+			fallthrough
+		case eof, '\n':
+			return l.errorf("unterminated quoted string")
+		case quoteChr:
+			break Loop
+		}
+	}
+	l.emit(itemString)
+	return lexText
+}
+
+func lexTemplateVariable(l *lexer) stateFn {
+	if x := strings.Index(l.input[l.pos:], rightDelim); x >= 0 {
+		l.pos += Pos(x) + Pos(len(rightDelim))
+		l.emit(itemTemplateVar)
+
+		// we need to consume "}}"
+
+		return lexText
+	} else if x == -1 {
+		return l.errorf("unterminated template variable")
+	}
+
 	return nil
+	// error checking
+}
+
+func isEndOfLine(r rune) bool {
+	return r == '\r' || r == '\n'
+}
+
+func isSpace(r rune) bool {
+	return r == ' ' || r == '\t'
 }
