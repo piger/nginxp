@@ -20,9 +20,6 @@ func Stuff(input string) {
 
 	for i, t := range items {
 		switch {
-		case t.typ == itemNewLine:
-			startOfLine = true
-			fmt.Println()
 		case t.typ == itemOpenBlock:
 			depth++
 			fmt.Print("{")
@@ -51,7 +48,13 @@ func Stuff(input string) {
 				fmt.Print(" ")
 			}
 		case t.typ == itemNewLine:
-			fmt.Println()
+			startOfLine = true
+			c := strings.Count(t.val, "\n")
+			if c > 2 {
+				c = 2
+			}
+			// fmt.Printf("c = %d\n", c)
+			fmt.Print(strings.Repeat("\n", c))
 		default:
 			fmt.Print(t.val)
 		}
