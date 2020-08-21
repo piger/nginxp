@@ -18,6 +18,37 @@ func Stuff(input string) {
 		items = append(items, t)
 	}
 
+	// the list of longest starting word per block
+	var longest []int
+	// the list of longest word
+	var lt int
+	startOfLine = true
+	for _, t := range items {
+		switch {
+		case startOfLine && t.typ == itemStatement:
+			ll := len(t.val)
+			if ll > lt {
+				lt = ll
+			}
+			startOfLine = false
+		case t.typ == itemNewLine:
+			c := strings.Count(t.val, "\n")
+			if c >= 2 {
+				longest = append(longest, lt)
+				lt = 0
+			}
+
+			startOfLine = true
+		}
+	}
+	longest = append(longest, lt)
+
+	fmt.Printf("longest = %v", longest)
+
+	startOfLine = false
+	var firstOfLine bool
+	var longestIdx int
+
 	for i, t := range items {
 		switch {
 		case t.typ == itemOpenBlock:
@@ -31,8 +62,12 @@ func Stuff(input string) {
 			var skipIndent bool
 
 			if n < len(items) {
-				if items[n].typ == itemCloseBlock {
+				switch {
+				case items[n].typ == itemCloseBlock:
 					skipIndent = true
+				case items[n].typ == itemOpenBlock:
+					fmt.Print(" ")
+					continue
 				}
 			}
 			if depth > 0 && startOfLine {
@@ -55,8 +90,19 @@ func Stuff(input string) {
 			}
 			// fmt.Printf("c = %d\n", c)
 			fmt.Print(strings.Repeat("\n", c))
+			firstOfLine = true
+			// if next is another "\n", increment longestIdx
+			if c >= 2 {
+				longestIdx++
+			}
 		default:
-			fmt.Print(t.val)
+			if firstOfLine {
+				firstOfLine = false
+				sfmt := fmt.Sprintf("%%-%ds", longest[longestIdx])
+				fmt.Printf(sfmt, t.val)
+			} else {
+				fmt.Print(t.val)
+			}
 		}
 	}
 }
