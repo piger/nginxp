@@ -293,15 +293,10 @@ func lexTemplateVariable(l *lexer) stateFn {
 		l.pos += Pos(x) + Pos(len(rightDelim))
 		l.emit(itemTemplateVar)
 
-		// we need to consume "}}"
-
 		return lexText
-	} else if x == -1 {
-		return l.errorf("unterminated template variable")
 	}
+	return l.errorf("unterminated template variable")
 
-	return nil
-	// error checking
 }
 
 func isEndOfLine(r rune) bool {
