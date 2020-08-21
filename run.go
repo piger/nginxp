@@ -96,11 +96,14 @@ func Stuff(input string) {
 				longestIdx++
 			}
 		default:
-			if firstOfLine {
+			switch {
+			case t.val == "location" || t.val == "upstream" || t.val == "server":
+				fmt.Print(t.val)
+			case firstOfLine:
 				firstOfLine = false
 				sfmt := fmt.Sprintf("%%-%ds", longest[longestIdx])
 				fmt.Printf(sfmt, t.val)
-			} else {
+			default:
 				fmt.Print(t.val)
 			}
 		}
