@@ -18,12 +18,14 @@ func mkItem(typ itemType, text string) item {
 var (
 	tEOF         = mkItem(itemEOF, "")
 	tQuote       = mkItem(itemString, `"tis a string"`)
+	tQuoteMixed  = mkItem(itemString, `"tis 'a string"`)
 	tQuoteSingle = mkItem(itemString, `'it\'s a me'`)
 )
 
 var lexTests = []lexTest{
 	{"empty", "", []item{tEOF}},
 	{"quote", `"tis a string"`, []item{tQuote, tEOF}},
+	{"quote mixed", `"tis 'a string"`, []item{tQuoteMixed, tEOF}},
 	{"quote single", `'it\'s a me'`, []item{tQuoteSingle, tEOF}},
 	{"comment", "# I'm a comment line", []item{
 		mkItem(itemComment, " I'm a comment line"),
@@ -33,6 +35,10 @@ var lexTests = []lexTest{
 		mkItem(itemComment, " I'm a comment line"),
 		mkItem(itemComment, "and more"),
 		tEOF,
+	}},
+	// errors
+	{"unclosed quoted string", `"I'm unclosed`, []item{
+		mkItem(itemError, "unterminated quoted string"),
 	}},
 }
 

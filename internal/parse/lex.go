@@ -157,17 +157,18 @@ func lexText(l *lexer) stateFn {
 
 // lexQuote scans a quoted string (with either single or double quotes).
 func lexQuote(l *lexer) stateFn {
+	marker := rune(l.input[l.start])
 Loop:
 	for {
-		switch l.next() {
-		case '\\':
-			if r := l.next(); r != eof && r != '\n' {
+		switch r := l.next(); {
+		case r == '\\':
+			if n := l.next(); n != eof && n != '\n' {
 				break
 			}
 			fallthrough
-		case eof, '\n':
+		case r == eof, r == '\n':
 			return l.errorf("unterminated quoted string")
-		case '"', '\'':
+		case r == marker:
 			break Loop
 		}
 	}
