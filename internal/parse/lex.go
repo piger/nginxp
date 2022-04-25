@@ -24,8 +24,8 @@ func (i item) String() string {
 	case itemError:
 		return i.val
 	}
-	if len(i.val) > 10 {
-		return fmt.Sprintf("%.10q...", i.val)
+	if len(i.val) > 20 {
+		return fmt.Sprintf("%.20q...", i.val)
 	}
 	return fmt.Sprintf("%q", i.val)
 }
