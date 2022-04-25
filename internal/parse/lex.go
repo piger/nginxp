@@ -166,7 +166,7 @@ Loop:
 				break
 			}
 			fallthrough
-		case r == eof, r == '\n':
+		case r == eof || r == '\n':
 			return l.errorf("unterminated quoted string")
 		case r == marker:
 			break Loop
