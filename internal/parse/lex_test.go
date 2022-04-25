@@ -65,6 +65,13 @@ var lexTests = []lexTest{
 		mkItem(itemComment, "and more"),
 		tEOF,
 	}},
+	{"directive with arguments", `proxy_set_header Host "Foo-Bar";`, []item{
+		mkItem(itemWord, "proxy_set_header"),
+		mkItem(itemWord, "Host"),
+		mkItem(itemString, `"Foo-Bar"`),
+		mkItem(itemTerminator, ";"),
+		tEOF,
+	}},
 	// errors
 	{"unclosed quoted string", `"I'm unclosed`, []item{
 		mkItem(itemError, "unterminated quoted string"),
