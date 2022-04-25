@@ -1,6 +1,34 @@
 package parse
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
+
+// itemName maps item types to names that can be prettyprinted.
+var itemName = map[itemType]string{
+	itemError:      "error",
+	itemEOF:        "EOF",
+	itemComment:    "comment",
+	itemString:     "quoted string",
+	itemWord:       "word",
+	itemNewline:    "newline",
+	itemTerminator: "terminator",
+	itemLeftBlock:  "open block",
+	itemRightBlock: "close block",
+	itemSpace:      "whitespace",
+	itemVariable:   "variable",
+	itemDirective:  "directive",
+	itemArgument:   "argument",
+}
+
+func (i itemType) String() string {
+	s := itemName[i]
+	if s == "" {
+		return fmt.Sprintf("item%d", int(i))
+	}
+	return s
+}
 
 type lexTest struct {
 	name  string

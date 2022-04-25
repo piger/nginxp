@@ -17,19 +17,3 @@ const (
 )
 
 const eof = -1
-
-var itemName = map[itemType]string{
-	itemError:      "error",
-	itemEOF:        "EOF",
-	itemComment:    "comment",
-	itemString:     "quoted string",
-	itemWord:       "word",
-	itemNewline:    "newline",
-	itemTerminator: "terminator",
-	itemLeftBlock:  "open block",
-	itemRightBlock: "close block",
-	itemSpace:      "whitespace",
-	itemVariable:   "variable",
-	itemDirective:  "directive",
-	itemArgument:   "argument",
-}
