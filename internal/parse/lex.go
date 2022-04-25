@@ -175,12 +175,10 @@ func lexText(l *lexer) stateFn {
 	case isSpace(r):
 		l.ignore()
 		return lexText
-	case isAlphaNumeric(r):
+	default:
 		l.backup()
 		return lexWord
 	}
-
-	return lexText
 }
 
 // lexQuote scans a quoted string (with either single or double quotes).
