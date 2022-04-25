@@ -139,7 +139,35 @@ func (l *lexer) run() {
 
 // state functions
 
+// lexText scans the input until EOF.
 func lexText(l *lexer) stateFn {
-	// not implemented
-	return nil
+	switch r := l.next(); {
+	case r == eof:
+		l.emit(itemEOF)
+		return nil
+	case r == '"' || r == '\'':
+		return lexQuote
+	}
+
+	return lexText
+}
+
+// lexQuote scans a quoted string (with either single or double quotes).
+func lexQuote(l *lexer) stateFn {
+Loop:
+	for {
+		switch l.next() {
+		case '\\':
+			if r := l.next(); r != eof && r != '\n' {
+				break
+			}
+			fallthrough
+		case eof, '\n':
+			return l.errorf("unterminated quoted string")
+		case '"', '\'':
+			break Loop
+		}
+	}
+	l.emit(itemString)
+	return lexText
 }

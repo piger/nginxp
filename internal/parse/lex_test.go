@@ -16,11 +16,15 @@ func mkItem(typ itemType, text string) item {
 }
 
 var (
-	tEOF = mkItem(itemEOF, "")
+	tEOF         = mkItem(itemEOF, "")
+	tQuote       = mkItem(itemString, `"tis a string"`)
+	tQuoteSingle = mkItem(itemString, `'it\'s a me'`)
 )
 
 var lexTests = []lexTest{
 	{"empty", "", []item{tEOF}},
+	{"quote", `"tis a string"`, []item{tQuote, tEOF}},
+	{"quote single", `'it\'s a me'`, []item{tQuoteSingle, tEOF}},
 }
 
 func collect(t *lexTest) (items []item) {
