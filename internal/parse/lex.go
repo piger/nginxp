@@ -3,6 +3,7 @@ package parse
 import (
 	"fmt"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -150,6 +151,25 @@ func lexText(l *lexer) stateFn {
 	case r == '#':
 		l.ignore()
 		return lexComment
+	case r == ';':
+		l.emit(itemTerminator)
+		return lexText
+	case r == '{':
+		// should we increment a counter here, to keep track of the nesting level?
+		l.emit(itemLeftBlock)
+		return lexText
+	case r == '}':
+		l.emit(itemRightBlock)
+		return lexText
+	case r == '\n':
+		l.emit(itemNewline)
+		return lexText
+	case isSpace(r):
+		l.ignore()
+		return lexText
+	case isAlphaNumeric(r):
+		l.backup()
+		return lexWord
 	}
 
 	return lexText
@@ -188,4 +208,29 @@ Loop:
 	}
 	l.emit(itemComment)
 	return lexText
+}
+
+// lexWord scans a word, which can be a directive or an argument for a directive.
+// A "word" can be terminated by space, ';' or the start of a new block '{'.
+func lexWord(l *lexer) stateFn {
+Loop:
+	for {
+		switch r := l.next(); {
+		case isSpace(r) || r == ';' || r == '{':
+			break Loop
+		case r == eof:
+			return l.errorf("unterminated line") // XXX
+		}
+	}
+	l.backup()
+	l.emit(itemWord)
+	return lexText
+}
+
+func isSpace(r rune) bool {
+	return r == ' ' || r == '\t'
+}
+
+func isAlphaNumeric(r rune) bool {
+	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }

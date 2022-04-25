@@ -33,6 +33,7 @@ var lexTests = []lexTest{
 	}},
 	{"two comments", "# I'm a comment line\n#and more", []item{
 		mkItem(itemComment, " I'm a comment line"),
+		mkItem(itemNewline, "\n"),
 		mkItem(itemComment, "and more"),
 		tEOF,
 	}},
