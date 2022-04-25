@@ -45,6 +45,7 @@ type lexer struct {
 	items     chan item // channel of scanned items
 	line      int       // 1+number of newlines seen
 	startLine int       // start line of this item
+	depth     int       // depth level of nested blocks
 }
 
 // emit passes an item back to the client.
@@ -144,6 +145,9 @@ func (l *lexer) run() {
 func lexText(l *lexer) stateFn {
 	switch r := l.next(); {
 	case r == eof:
+		if l.depth > 0 {
+			return l.errorf("unclosed block")
+		}
 		l.emit(itemEOF)
 		return nil
 	case r == '"' || r == '\'':
@@ -155,10 +159,14 @@ func lexText(l *lexer) stateFn {
 		l.emit(itemTerminator)
 		return lexText
 	case r == '{':
-		// should we increment a counter here, to keep track of the nesting level?
+		l.depth++
 		l.emit(itemLeftBlock)
 		return lexText
 	case r == '}':
+		l.depth--
+		if l.depth < 0 {
+			return l.errorf("unmatched closing block")
+		}
 		l.emit(itemRightBlock)
 		return lexText
 	case r == '\n':
