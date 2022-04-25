@@ -25,6 +25,15 @@ var lexTests = []lexTest{
 	{"empty", "", []item{tEOF}},
 	{"quote", `"tis a string"`, []item{tQuote, tEOF}},
 	{"quote single", `'it\'s a me'`, []item{tQuoteSingle, tEOF}},
+	{"comment", "# I'm a comment line", []item{
+		mkItem(itemComment, " I'm a comment line"),
+		tEOF,
+	}},
+	{"two comments", "# I'm a comment line\n#and more", []item{
+		mkItem(itemComment, " I'm a comment line"),
+		mkItem(itemComment, "and more"),
+		tEOF,
+	}},
 }
 
 func collect(t *lexTest) (items []item) {

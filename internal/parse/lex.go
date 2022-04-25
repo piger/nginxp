@@ -147,6 +147,9 @@ func lexText(l *lexer) stateFn {
 		return nil
 	case r == '"' || r == '\'':
 		return lexQuote
+	case r == '#':
+		l.ignore()
+		return lexComment
 	}
 
 	return lexText
@@ -169,5 +172,19 @@ Loop:
 		}
 	}
 	l.emit(itemString)
+	return lexText
+}
+
+// lexComment scans a comment. The left marker is known to be present.
+func lexComment(l *lexer) stateFn {
+Loop:
+	for {
+		switch l.next() {
+		case eof, '\n':
+			l.backup()
+			break Loop
+		}
+	}
+	l.emit(itemComment)
 	return lexText
 }
