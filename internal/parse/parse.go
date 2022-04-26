@@ -59,6 +59,12 @@ func (t *Tree) parse() {
 // XXX this function currently does not preserve inline comments.
 func (t *Tree) parseDirective() Node {
 	item := t.next()
+
+	masks, ok := dirMask[item.val]
+	if !ok {
+		t.errorf("invalid directive: %q", item.val)
+	}
+
 	n := t.newDirective(item.pos, item.val)
 
 Loop:
@@ -86,6 +92,29 @@ Loop:
 			t.next()
 		default:
 			t.errorf("unterminated directive: found %s", p.typ)
+		}
+	}
+
+	// now that we have built the full node we can perform some validation,
+	// like checking the number of expected arguments and the presence of blocks.
+	var args int
+	var hasBlock bool
+	for _, a := range n.Args {
+		switch a.(type) {
+		case *ArgumentNode:
+			args++
+		case *BlockNode:
+			hasBlock = true
+		}
+	}
+
+	for _, mask := range masks {
+		if mask&NGX_CONF_TAKE1 == 1 && args > 1 {
+			t.errorf("invalid number of arguments for %q", n)
+		}
+
+		if mask&NGX_CONF_BLOCK == 1 && !hasBlock {
+			t.errorf("directive %q expects a block", n)
 		}
 	}
 
