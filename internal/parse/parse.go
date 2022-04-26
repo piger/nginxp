@@ -51,7 +51,7 @@ func (t *Tree) parse() {
 			item := t.next()
 			t.Root.append(t.newComment(item.pos, item.val))
 		default:
-			t.next()
+			t.errorf("unexpected item in parse: %s", t.peek().typ)
 		}
 	}
 }
