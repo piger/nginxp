@@ -47,6 +47,9 @@ func (t *Tree) parse() {
 			if node != nil {
 				t.Root.append(node)
 			}
+		case itemComment:
+			item := t.next()
+			t.Root.append(t.newComment(item.pos, item.val))
 		default:
 			t.next()
 		}
