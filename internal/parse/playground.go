@@ -2,19 +2,28 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 )
 
-func printDirective(node *DirectiveNode) {
-	fmt.Printf("%s ", node)
+func printDirective(node *DirectiveNode, indent int) {
+	if indent > 0 {
+		fmt.Print(strings.Repeat(" ", indent))
+	}
+
+	fmt.Printf("%s", node)
 	mustTerminate := false
+
 	for _, x := range node.Args {
 		switch arg := x.(type) {
 		case *ArgumentNode:
-			fmt.Printf("%s ", arg)
+			fmt.Printf(" %s", arg)
 			mustTerminate = true
 		case *BlockNode:
-			fmt.Printf("{\n")
-			printList(arg.List)
+			fmt.Printf(" {\n")
+			printList(arg.List, indent+4)
+			if indent > 0 {
+				fmt.Print(strings.Repeat(" ", indent))
+			}
 			fmt.Printf("}\n")
 			mustTerminate = false
 		}
@@ -24,12 +33,15 @@ func printDirective(node *DirectiveNode) {
 	}
 }
 
-func printList(node *ListNode) {
+func printList(node *ListNode, indent int) {
 	for _, x := range node.Nodes {
 		switch sub := x.(type) {
 		case *DirectiveNode:
-			printDirective(sub)
+			printDirective(sub, indent)
 		case *CommentNode:
+			if indent > 0 {
+				fmt.Print(strings.Repeat(" ", indent))
+			}
 			fmt.Println(sub)
 		case *EmptyLineNode:
 			fmt.Println()
@@ -57,5 +69,5 @@ func LexerPlayground(filename, contents string) {
 		panic(err)
 	}
 
-	printList(t.Root)
+	printList(t.Root, 0)
 }
