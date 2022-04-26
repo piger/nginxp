@@ -82,6 +82,15 @@ func (t *Tree) recover(errp *error) {
 	}
 }
 
+func (t *Tree) errorf(format string, args ...interface{}) {
+	t.Root = nil // XXX why?
+	panic(fmt.Errorf(format, args...))
+}
+
+func (t *Tree) error(err error) {
+	t.errorf("%s", err)
+}
+
 func Parse(name, text string) {
 	t := Tree{
 		Filename: name,
