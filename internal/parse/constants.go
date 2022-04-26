@@ -5,17 +5,13 @@ import "fmt"
 const (
 	itemError itemType = iota // error occurred; value is text of error.
 	itemEOF
-	itemComment
-	itemSpace
+	itemComment    // a comment line. TODO: comments can also appear inline.
 	itemString     // quoted string (including quotes)
-	itemVariable   // variable starting with '$', such as '$hello'
+	itemWord       // a generic word, which can be a directive or an argument for a directive
+	itemNewline    // a newline token
+	itemTerminator // the character ';' which terminates a directive
 	itemLeftBlock  // left block delimiter
 	itemRightBlock // right block delimiter
-	itemDirective  // a configuration directive, such as "server", "location" or "proxy_set_header"
-	itemArgument   // an argument of a directive, which can be a quoted string or a raw string
-	itemTerminator // the character ';' which terminates a directive
-	itemWord
-	itemNewline
 )
 
 // itemName maps item types to names that can be prettyprinted.
@@ -29,10 +25,6 @@ var itemName = map[itemType]string{
 	itemTerminator: "terminator",
 	itemLeftBlock:  "open block",
 	itemRightBlock: "close block",
-	itemSpace:      "whitespace",
-	itemVariable:   "variable",
-	itemDirective:  "directive",
-	itemArgument:   "argument",
 }
 
 func (i itemType) String() string {

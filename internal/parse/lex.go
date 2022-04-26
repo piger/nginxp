@@ -3,7 +3,6 @@ package parse
 import (
 	"fmt"
 	"strings"
-	"unicode"
 	"unicode/utf8"
 )
 
@@ -243,8 +242,4 @@ Loop:
 
 func isSpace(r rune) bool {
 	return r == ' ' || r == '\t'
-}
-
-func isAlphaNumeric(r rune) bool {
-	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }
