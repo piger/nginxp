@@ -2,6 +2,9 @@ package parse
 
 import "fmt"
 
+//go:generate go run gen_analyser.go
+//go:generate go fmt bitmasks.go
+
 const (
 	itemError itemType = iota // error occurred; value is text of error.
 	itemEOF
