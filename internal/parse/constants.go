@@ -1,5 +1,7 @@
 package parse
 
+import "fmt"
+
 const (
 	itemError itemType = iota // error occurred; value is text of error.
 	itemEOF
@@ -15,5 +17,30 @@ const (
 	itemWord
 	itemNewline
 )
+
+// itemName maps item types to names that can be prettyprinted.
+var itemName = map[itemType]string{
+	itemError:      "error",
+	itemEOF:        "EOF",
+	itemComment:    "comment",
+	itemString:     "quoted string",
+	itemWord:       "word",
+	itemNewline:    "newline",
+	itemTerminator: "terminator",
+	itemLeftBlock:  "open block",
+	itemRightBlock: "close block",
+	itemSpace:      "whitespace",
+	itemVariable:   "variable",
+	itemDirective:  "directive",
+	itemArgument:   "argument",
+}
+
+func (i itemType) String() string {
+	s := itemName[i]
+	if s == "" {
+		return fmt.Sprintf("item%d", int(i))
+	}
+	return s
+}
 
 const eof = -1
