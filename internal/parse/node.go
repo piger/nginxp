@@ -10,9 +10,11 @@ func (t NodeType) Type() NodeType {
 }
 
 const (
-	NodeText    NodeType = iota
-	NodeComment          // A comment.
-	NodeList
+	NodeText      NodeType = iota
+	NodeComment            // A comment.
+	NodeList               // A list of Nodes
+	NodeDirective          // An nginx configuration directive
+	NodeBlock              // A configuration block
 )
 
 // Pos represents a byte position in the original input text from which this
@@ -72,6 +74,7 @@ func (l *ListNode) Copy() Node {
 	return l.CopyList()
 }
 
+// CommentNode holds a comment.
 type CommentNode struct {
 	NodeType
 	Pos
@@ -93,4 +96,17 @@ func (c *CommentNode) tree() *Tree {
 
 func (c *CommentNode) Copy() Node {
 	return &CommentNode{tr: c.tr, NodeType: NodeComment, Pos: c.Pos, Text: c.Text}
+}
+
+// DirectiveNode contains a directive and is linked to its arguments, including an optional block.
+type DirectiveNode struct {
+	NodeType
+	Pos
+	tr   *Tree
+	Text string
+	Args []Node // Arguments, which can include a "Block"
+}
+
+func (t *Tree) newDirective(pos Pos, text string) *DirectiveNode {
+	return &DirectiveNode{tr: t, NodeType: NodeDirective, Pos: pos, Text: text}
 }
