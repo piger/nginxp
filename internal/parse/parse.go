@@ -123,8 +123,8 @@ func (t *Tree) error(err error) {
 	t.errorf("%s", err)
 }
 
-func Parse(name, text string) {
-	t := Tree{
+func Parse(name, text string) (*Tree, error) {
+	t := &Tree{
 		Filename: name,
 		Root:     nil,
 	}
@@ -133,4 +133,6 @@ func Parse(name, text string) {
 	if err != nil {
 		panic(err)
 	}
+
+	return t, nil
 }
