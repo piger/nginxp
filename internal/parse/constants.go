@@ -1,6 +1,8 @@
 package parse
 
-import "fmt"
+import (
+	"fmt"
+)
 
 //go:generate go run gen_analyser.go
 //go:generate go fmt bitmasks.go
@@ -39,3 +41,41 @@ func (i itemType) String() string {
 }
 
 const eof = -1
+
+type confContext int
+
+// These contexts maps to: https://github.com/nginxinc/crossplane/blob/ad3d23094bbd8b1f5586b48b883b2e48d6587e49/crossplane/analyzer.py#L2095
+// Their purpose is to be used with the map that follows to associate a context with a bitmask.
+const (
+	contextRoot                    confContext = iota // main configuration section
+	contextEvents                                     // events
+	contextMail                                       // mail
+	contextMailServer                                 // mail -> server
+	contextStream                                     // stream
+	contextStreamServer                               // stream -> server
+	contextStreamUpstream                             // stream -> upstream
+	contextHttp                                       // http
+	contextHttpServer                                 // http -> server
+	contextHttpLocation                               // http -> location
+	contextHttpUpstream                               // http -> upstream
+	contextHttpServerIf                               // http -> server -> if
+	contextHttpLocationIf                             // http -> location -> if
+	contextHttpLocationLimitExcept                    // http -> location -> limit_except
+)
+
+var contextBitmask = map[confContext]int{
+	contextRoot:                    NGX_MAIN_CONF,
+	contextEvents:                  NGX_EVENT_CONF,
+	contextMail:                    NGX_MAIL_MAIN_CONF,
+	contextMailServer:              NGX_MAIL_SRV_CONF,
+	contextStream:                  NGX_STREAM_MAIN_CONF,
+	contextStreamServer:            NGX_STREAM_SRV_CONF,
+	contextStreamUpstream:          NGX_STREAM_UPS_CONF,
+	contextHttp:                    NGX_HTTP_MAIN_CONF,
+	contextHttpServer:              NGX_HTTP_SRV_CONF,
+	contextHttpLocation:            NGX_HTTP_LOC_CONF,
+	contextHttpUpstream:            NGX_HTTP_UPS_CONF,
+	contextHttpServerIf:            NGX_HTTP_SIF_CONF,
+	contextHttpLocationIf:          NGX_HTTP_LIF_CONF,
+	contextHttpLocationLimitExcept: NGX_HTTP_LMT_CONF,
+}
