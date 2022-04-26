@@ -5,6 +5,8 @@ import "fmt"
 // NodeType identifies the type of a parse tree node.
 type NodeType int
 
+// Type returns itself and provides an easy default implementation for
+// embedding in a Node.
 func (t NodeType) Type() NodeType {
 	return t
 }
@@ -56,9 +58,8 @@ func (l *ListNode) tree() *Tree {
 	return l.tr
 }
 
-// XXX
 func (l *ListNode) String() string {
-	return "XXX"
+	return ""
 }
 
 func (l *ListNode) CopyList() *ListNode {
@@ -122,8 +123,11 @@ func (d *DirectiveNode) tree() *Tree {
 }
 
 func (d *DirectiveNode) Copy() Node {
-	panic("not implemented")
-	return nil
+	n := &DirectiveNode{tr: d.tr, NodeType: NodeDirective, Pos: d.Pos, Text: d.Text}
+	for _, arg := range d.Args {
+		n.Args = append(n.Args, arg.Copy())
+	}
+	return n
 }
 
 func (d *DirectiveNode) append(arg Node) {
@@ -197,8 +201,8 @@ func (b *BlockNode) tree() *Tree {
 }
 
 func (b *BlockNode) Copy() Node {
-	// need deep copy
-	panic("not implemented")
+	n := &BlockNode{tr: b.tr, NodeType: NodeBlock, Pos: b.Pos, List: b.List.CopyList()}
+	return n
 }
 
 func (b *BlockNode) append(node Node) {
