@@ -13,7 +13,7 @@ type itemType int
 // item represent a token or text strin returned from the scanner.
 type item struct {
 	typ  itemType // The type of this item.
-	pos  int      // The starting position, in bytes, of this item in the input string.
+	pos  Pos      // The starting position, in bytes, of this item in the input string.
 	val  string   // The value of this item.
 	line int      // The line number at the start of this item.
 }
@@ -39,9 +39,9 @@ type stateFn func(*lexer) stateFn
 type lexer struct {
 	name      string    // used only for error reports.
 	input     string    // the string being scanned
-	start     int       // start position of this item
-	pos       int       // current position in the input
-	width     int       // width of the last rune read
+	start     Pos       // start position of this item
+	pos       Pos       // current position in the input
+	width     Pos       // width of the last rune read
 	items     chan item // channel of scanned items
 	line      int       // 1+number of newlines seen
 	startLine int       // start line of this item
@@ -57,11 +57,12 @@ func (l *lexer) emit(t itemType) {
 
 // next returns the next rune in the input.
 func (l *lexer) next() (r rune) {
-	if l.pos >= len(l.input) {
+	if int(l.pos) >= len(l.input) {
 		l.width = 0
 		return eof
 	}
-	r, l.width = utf8.DecodeRuneInString(l.input[l.pos:])
+	r, w := utf8.DecodeRuneInString(l.input[l.pos:])
+	l.width = Pos(w)
 	l.pos += l.width
 	if r == '\n' {
 		l.line++
@@ -116,6 +117,13 @@ func (l *lexer) errorf(format string, args ...interface{}) stateFn {
 // nextItem returns the next item from the input.
 func (l *lexer) nextItem() item {
 	return <-l.items
+}
+
+// drain drains the output so the lexing goroutine will exit.
+// Called by the parser, not in the lexing goroutine.
+func (l *lexer) drain() {
+	for range l.items {
+	}
 }
 
 // lex creates a new scanner for the input string.
