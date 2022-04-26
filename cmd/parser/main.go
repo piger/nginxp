@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -74,6 +73,7 @@ Loop:
 func run() error {
 	filename := flag.Arg(0)
 	if filename == "" {
+		flag.Usage()
 		return errors.New("missing filename parameter")
 	}
 
@@ -109,7 +109,7 @@ func main() {
 	flag.Parse()
 
 	if err := run(); err != nil {
-		log.Printf("ERROR: %s", err)
+		fmt.Printf("ERROR: %s", err)
 		os.Exit(1)
 	}
 }
