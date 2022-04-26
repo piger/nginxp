@@ -15,6 +15,7 @@ const (
 	NodeList               // A list of Nodes
 	NodeDirective          // An nginx configuration directive
 	NodeBlock              // A configuration block
+	NodeArgument           // An argument for a directive
 )
 
 // Pos represents a byte position in the original input text from which this
@@ -109,4 +110,45 @@ type DirectiveNode struct {
 
 func (t *Tree) newDirective(pos Pos, text string) *DirectiveNode {
 	return &DirectiveNode{tr: t, NodeType: NodeDirective, Pos: pos, Text: text}
+}
+
+func (d *DirectiveNode) String() string {
+	return d.Text
+}
+
+func (d *DirectiveNode) tree() *Tree {
+	return d.tr
+}
+
+func (d *DirectiveNode) Copy() Node {
+	panic("not implemented")
+	return nil
+}
+
+func (d *DirectiveNode) append(arg *ArgumentNode) {
+	d.Args = append(d.Args, arg)
+}
+
+// ArgumentNode contains one argument (string) for a directive.
+type ArgumentNode struct {
+	NodeType
+	Pos
+	tr   *Tree
+	Text string
+}
+
+func (t *Tree) newArgument(pos Pos, text string) *ArgumentNode {
+	return &ArgumentNode{tr: t, NodeType: NodeArgument, Pos: pos, Text: text}
+}
+
+func (a *ArgumentNode) String() string {
+	return a.Text
+}
+
+func (a *ArgumentNode) tree() *Tree {
+	return a.tr
+}
+
+func (a *ArgumentNode) Copy() Node {
+	return &ArgumentNode{tr: a.tr, NodeType: NodeArgument, Pos: a.Pos, Text: a.Text}
 }
