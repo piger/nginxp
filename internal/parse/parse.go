@@ -42,6 +42,11 @@ func (t *Tree) parse() {
 		switch t.peek().typ {
 		case itemWord:
 			t.Root.append(t.parseDirective())
+		case itemNewline:
+			node := t.parseEmptyLines()
+			if node != nil {
+				t.Root.append(node)
+			}
 		default:
 			t.next()
 		}
@@ -69,10 +74,8 @@ Loop:
 		case itemTerminator:
 			break Loop
 		case itemNewline:
-			node := t.parseEmptyLines()
-			if node != nil {
-				t.Root.append(node)
-			}
+			// XXX newlines found while scanning a directive should be safe to ignore.
+			t.next()
 		default:
 			t.errorf("unterminated directive: found %s", p.typ)
 		}
