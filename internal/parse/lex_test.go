@@ -22,6 +22,8 @@ var (
 	tQuote       = mkItem(itemString, `"tis a string"`)
 	tQuoteMixed  = mkItem(itemString, `"tis 'a string"`)
 	tQuoteSingle = mkItem(itemString, `'it\'s a me'`)
+	tNewLine     = mkItem(itemNewline, "\n")
+	tTerm        = mkItem(itemTerminator, ";")
 )
 
 var lexTests = []lexTest{
@@ -52,6 +54,15 @@ var lexTests = []lexTest{
 		mkItem(itemString, `"Foo"`),
 		mkItem(itemTerminator, ";"),
 		mkItem(itemComment, " a comment"),
+		tEOF,
+	}},
+	{"newline", "\n", []item{tNewLine, tEOF}},
+	{"newlines", "\n\n", []item{tNewLine, tNewLine, tEOF}},
+	{"word with newlines", "foo;\n\n", []item{
+		mkItem(itemWord, "foo"),
+		tTerm,
+		tNewLine,
+		tNewLine,
 		tEOF,
 	}},
 	// errors
