@@ -38,8 +38,40 @@ func (t *Tree) Parse(text string) (tree *Tree, err error) {
 func (t *Tree) parse() {
 	t.Root = t.newList(t.peek().pos)
 	for t.peek().typ != itemEOF {
-		// ...
+		switch t.peek().typ {
+		case itemWord:
+			t.Root.append(t.parseDirective())
+		case itemComment:
+			// should create a CommentNode and append.
+			// t.Root.append(...)
+		}
 	}
+}
+
+func (t *Tree) parseDirective() Node {
+	item := t.next()
+	n := t.newDirective(item.pos, item.val)
+
+Loop:
+	for {
+		p := t.peek()
+		switch p.typ {
+		case itemWord:
+			item := t.next()
+			arg := t.newArgument(item.pos, item.val)
+			n.append(arg)
+		case itemLeftBlock:
+			// should parse the entire block until itemRightBlock
+			// should a block node just be a ListNode? Not really because a Block node
+			// I think should know its own context...
+		case itemTerminator:
+			break Loop
+		default:
+			t.errorf("unterminated directive")
+		}
+	}
+
+	return n
 }
 
 // peek returns but does not consume the next token.
