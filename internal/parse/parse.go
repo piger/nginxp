@@ -129,9 +129,8 @@ func Parse(name, text string) {
 		Root:     nil,
 	}
 
-	res, err := t.Parse(text)
+	_, err := t.Parse(text)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%+v\n", res)
 }
