@@ -6,6 +6,10 @@ import "fmt"
 func LexerPlayground(filename, contents string) {
 	lex := lex(filename, contents)
 	for token := range lex.items {
-		fmt.Printf("%+v (%s)\n", token, token.typ)
+		if token.val == "\n" {
+			fmt.Println()
+		} else {
+			fmt.Printf("%s (%s)", token.val, token.typ)
+		}
 	}
 }
