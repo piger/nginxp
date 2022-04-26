@@ -46,6 +46,14 @@ var lexTests = []lexTest{
 		mkItem(itemTerminator, ";"),
 		tEOF,
 	}},
+	{"words ending with comment", `proxy_set_header Host "Foo"; # a comment`, []item{
+		mkItem(itemWord, "proxy_set_header"),
+		mkItem(itemWord, "Host"),
+		mkItem(itemString, `"Foo"`),
+		mkItem(itemTerminator, ";"),
+		mkItem(itemComment, " a comment"),
+		tEOF,
+	}},
 	// errors
 	{"unclosed quoted string", `"I'm unclosed`, []item{
 		mkItem(itemError, "unterminated quoted string"),

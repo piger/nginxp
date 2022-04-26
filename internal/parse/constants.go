@@ -5,7 +5,7 @@ import "fmt"
 const (
 	itemError itemType = iota // error occurred; value is text of error.
 	itemEOF
-	itemComment    // a comment line. TODO: comments can also appear inline.
+	itemComment    // a comment, which can occupy the whole line or be inline.
 	itemString     // quoted string (including quotes)
 	itemWord       // a generic word, which can be a directive or an argument for a directive
 	itemNewline    // a newline token
