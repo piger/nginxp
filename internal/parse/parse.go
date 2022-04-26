@@ -56,6 +56,7 @@ func (t *Tree) parse() {
 	}
 }
 
+// XXX this function currently does not preserve inline comments.
 func (t *Tree) parseDirective() Node {
 	item := t.next()
 	n := t.newDirective(item.pos, item.val)
