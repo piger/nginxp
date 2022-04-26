@@ -43,8 +43,7 @@ func (t *Tree) parse() {
 		case itemWord:
 			t.Root.append(t.parseDirective())
 		case itemNewline:
-			node := t.parseEmptyLines()
-			if node != nil {
+			if node := t.parseEmptyLines(); node != nil {
 				t.Root.append(node)
 			}
 		case itemComment:
@@ -153,8 +152,7 @@ Loop:
 		case itemWord:
 			block.append(t.parseDirective())
 		case itemNewline:
-			node := t.parseEmptyLines()
-			if node != nil {
+			if node := t.parseEmptyLines(); node != nil {
 				block.append(node)
 			}
 		case itemComment:
