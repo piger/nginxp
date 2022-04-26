@@ -126,7 +126,7 @@ func (d *DirectiveNode) Copy() Node {
 	return nil
 }
 
-func (d *DirectiveNode) append(arg *ArgumentNode) {
+func (d *DirectiveNode) append(arg Node) {
 	d.Args = append(d.Args, arg)
 }
 
@@ -174,4 +174,33 @@ func (e *EmptyLineNode) tree() *Tree {
 
 func (e *EmptyLineNode) Copy() Node {
 	return &EmptyLineNode{tr: e.tr, NodeType: NodeEmptyLine, Pos: e.Pos}
+}
+
+type BlockNode struct {
+	NodeType
+	Pos
+	tr   *Tree
+	List *ListNode // The list of nodes in this block
+}
+
+func (t *Tree) newBlock(pos Pos) *BlockNode {
+	l := t.newList(pos)
+	return &BlockNode{tr: t, NodeType: NodeBlock, Pos: pos, List: l}
+}
+
+func (b *BlockNode) String() string {
+	return ""
+}
+
+func (b *BlockNode) tree() *Tree {
+	return b.tr
+}
+
+func (b *BlockNode) Copy() Node {
+	// need deep copy
+	panic("not implemented")
+}
+
+func (b *BlockNode) append(node Node) {
+	b.List.append(node)
 }

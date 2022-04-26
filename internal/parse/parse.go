@@ -73,8 +73,12 @@ Loop:
 			// should parse the entire block until itemRightBlock
 			// should a block node just be a ListNode? Not really because a Block node
 			// I think should know its own context...
-			t.next() // drain
+			block := t.parseBlock()
+			n.append(block)
+			// A block always terminate a directive!
+			break Loop
 		case itemTerminator:
+			t.next()
 			break Loop
 		case itemNewline:
 			// XXX newlines found while scanning a directive should be safe to ignore.
@@ -105,6 +109,36 @@ func (t *Tree) parseEmptyLines() Node {
 	}
 
 	return res
+}
+
+// this is awfully similar to the global parse() method...
+func (t *Tree) parseBlock() Node {
+	blockStart := t.next()
+	block := t.newBlock(blockStart.pos)
+
+Loop:
+	for {
+		n := t.peek()
+		switch n.typ {
+		case itemWord:
+			block.append(t.parseDirective())
+		case itemNewline:
+			node := t.parseEmptyLines()
+			if node != nil {
+				block.append(node)
+			}
+		case itemComment:
+			item := t.next()
+			block.append(t.newComment(item.pos, item.val))
+		case itemRightBlock:
+			t.next()
+			break Loop
+		default:
+			t.errorf("unterminated block: %s", t.peek().typ)
+		}
+	}
+
+	return block
 }
 
 // peek returns but does not consume the next token.
