@@ -16,6 +16,7 @@ const (
 	NodeDirective          // An nginx configuration directive
 	NodeBlock              // A configuration block
 	NodeArgument           // An argument for a directive
+	NodeEmptyLine          // An empty line; will be used for formatting
 )
 
 // Pos represents a byte position in the original input text from which this
@@ -151,4 +152,26 @@ func (a *ArgumentNode) tree() *Tree {
 
 func (a *ArgumentNode) Copy() Node {
 	return &ArgumentNode{tr: a.tr, NodeType: NodeArgument, Pos: a.Pos, Text: a.Text}
+}
+
+type EmptyLineNode struct {
+	NodeType
+	Pos
+	tr *Tree
+}
+
+func (t *Tree) newEmptyLine(pos Pos) *EmptyLineNode {
+	return &EmptyLineNode{tr: t, NodeType: NodeEmptyLine, Pos: pos}
+}
+
+func (e *EmptyLineNode) String() string {
+	return "\n"
+}
+
+func (e *EmptyLineNode) tree() *Tree {
+	return e.tr
+}
+
+func (e *EmptyLineNode) Copy() Node {
+	return &EmptyLineNode{tr: e.tr, NodeType: NodeEmptyLine, Pos: e.Pos}
 }

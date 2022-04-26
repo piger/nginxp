@@ -25,6 +25,7 @@ func (t *Tree) stopParse() {
 	t.lex = nil
 }
 
+// XXX not sure if this should return a Tree, we don't expect to have multiple trees.
 func (t *Tree) Parse(text string) (tree *Tree, err error) {
 	defer t.recover(&err)
 
@@ -41,9 +42,8 @@ func (t *Tree) parse() {
 		switch t.peek().typ {
 		case itemWord:
 			t.Root.append(t.parseDirective())
-		case itemComment:
-			// should create a CommentNode and append.
-			// t.Root.append(...)
+		default:
+			t.next()
 		}
 	}
 }
@@ -56,7 +56,8 @@ Loop:
 	for {
 		p := t.peek()
 		switch p.typ {
-		case itemWord:
+		case itemWord, itemString:
+			// XXX should itemString be un-quoted before being added as a Node?
 			item := t.next()
 			arg := t.newArgument(item.pos, item.val)
 			n.append(arg)
@@ -64,14 +65,40 @@ Loop:
 			// should parse the entire block until itemRightBlock
 			// should a block node just be a ListNode? Not really because a Block node
 			// I think should know its own context...
+			t.next() // drain
 		case itemTerminator:
 			break Loop
+		case itemNewline:
+			node := t.parseEmptyLines()
+			if node != nil {
+				t.Root.append(node)
+			}
 		default:
-			t.errorf("unterminated directive")
+			t.errorf("unterminated directive: found %s", p.typ)
 		}
 	}
 
 	return n
+}
+
+// parseEmptyLines parse one or more newlines; it only emits a EmptyLineNode
+// when one or more _empty lines_ are found.
+// The general idea is that we don't care about newlines, but we care to keep
+// empty lines (multiple empty lines compressed into one) so that we can format the
+// tree later.
+func (t *Tree) parseEmptyLines() Node {
+	var res Node
+	this := t.next()
+
+	for t.peek().typ == itemNewline {
+		// discard all following newlines, but ensure we return at least one.
+		t.next()
+		if res == nil {
+			res = t.newEmptyLine(this.pos)
+		}
+	}
+
+	return res
 }
 
 // peek returns but does not consume the next token.
