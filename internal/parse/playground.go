@@ -4,6 +4,41 @@ import (
 	"fmt"
 )
 
+func printDirective(node *DirectiveNode) {
+	fmt.Printf("%s ", node)
+	mustTerminate := false
+	for _, x := range node.Args {
+		switch arg := x.(type) {
+		case *ArgumentNode:
+			fmt.Printf("%s ", arg)
+			mustTerminate = true
+		case *BlockNode:
+			fmt.Printf("{\n")
+			printList(arg.List)
+			fmt.Printf("}\n")
+			mustTerminate = false
+		}
+	}
+	if mustTerminate {
+		fmt.Printf(";\n")
+	}
+}
+
+func printList(node *ListNode) {
+	for _, x := range node.Nodes {
+		switch sub := x.(type) {
+		case *DirectiveNode:
+			printDirective(sub)
+		case *CommentNode:
+			fmt.Println(sub)
+		case *EmptyLineNode:
+			fmt.Println()
+		default:
+			panic("dunno")
+		}
+	}
+}
+
 // LexerPlayground is a "playground" function that showcase the lexer.
 func LexerPlayground(filename, contents string) {
 	lex := lex(filename, contents)
@@ -22,19 +57,5 @@ func LexerPlayground(filename, contents string) {
 		panic(err)
 	}
 
-	for _, node := range t.Root.Nodes {
-		switch n := node.(type) {
-		case *DirectiveNode:
-			fmt.Printf("%s ", n)
-			for _, arg := range n.Args {
-				fmt.Printf("%s ", arg)
-			}
-			fmt.Println()
-		case *EmptyLineNode:
-			fmt.Println()
-		case *CommentNode:
-			fmt.Println(n)
-		}
-
-	}
+	printList(t.Root)
 }
