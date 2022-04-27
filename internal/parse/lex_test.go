@@ -65,6 +65,12 @@ var lexTests = []lexTest{
 		tNewLine,
 		tEOF,
 	}},
+	{"word with variable", "access_by_lua_file code/${something};", []item{
+		mkItem(itemWord, "access_by_lua_file"),
+		mkItem(itemWord, "code/${something}"),
+		tTerm,
+		tEOF,
+	}},
 	// errors
 	{"unclosed quoted string", `"I'm unclosed`, []item{
 		mkItem(itemError, "unterminated quoted string"),
