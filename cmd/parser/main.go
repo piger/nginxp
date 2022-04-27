@@ -97,6 +97,10 @@ func run() error {
 	} else {
 		contents, ok := filesMap[defaultSection]
 		if !ok {
+			fmt.Printf("Available sections:\n")
+			for section, data := range filesMap {
+				fmt.Printf("\t%s (%d bytes)\n", section, len(data))
+			}
 			return errors.New("a configuration dump was read but no section was specified")
 		}
 		parse.LexerPlayground(defaultSection, contents)
@@ -110,7 +114,7 @@ func main() {
 	flag.Parse()
 
 	if err := run(); err != nil {
-		fmt.Printf("ERROR: %s", err)
+		fmt.Printf("ERROR: %s\n", err)
 		os.Exit(1)
 	}
 }
