@@ -79,3 +79,63 @@ var contextBitmask = map[confContext]int{
 	contextHttpLocationIf:          NGX_HTTP_LIF_CONF,
 	contextHttpLocationLimitExcept: NGX_HTTP_LMT_CONF,
 }
+
+type context map[string]bool
+
+var ctxLevels = []string{"root", "events", "mail", "server", "stream", "upstream", "http", "location", "if", "limit_except"}
+
+func NewCtx() *context {
+	c := make(context)
+	for _, lvl := range ctxLevels {
+		c[lvl] = false
+	}
+	return &c
+}
+
+func (c context) Push(level string) {
+	if _, ok := c[level]; !ok {
+		panic(fmt.Sprintf("unknown context level %q", level))
+	}
+	c[level] = true
+}
+
+func (c context) Pop(level string) {
+	if _, ok := c[level]; !ok {
+		panic(fmt.Sprintf("unknown context level %q", level))
+	}
+	c[level] = false
+}
+
+func (c context) ID() confContext {
+	switch {
+	case c["events"]:
+		return contextEvents
+	case c["mail"] && c["server"]:
+		return contextMailServer
+	case c["mail"]:
+		return contextMail
+	case c["stream"] && c["upstream"]:
+		return contextStreamUpstream
+	case c["stream"] && c["server"]:
+		return contextStreamServer
+	case c["stream"]:
+		return contextStream
+	case c["http"] && c["location"] && c["limit_except"]:
+		return contextHttpLocationLimitExcept
+	case c["http"] && c["location"] && c["if"]:
+		return contextHttpLocationIf
+	case c["http"] && c["server"] && c["if"]:
+		return contextHttpServerIf
+	case c["http"] && c["upstream"]:
+		return contextHttpUpstream
+	case c["http"] && c["location"]:
+		return contextHttpLocation
+	case c["http"] && c["server"]:
+		return contextHttpServer
+	case c["http"]:
+		return contextHttp
+	case c["root"]:
+		return contextRoot
+	}
+	panic("no context")
+}

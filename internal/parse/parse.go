@@ -38,10 +38,13 @@ func (t *Tree) Parse(text string) (tree *Tree, err error) {
 
 func (t *Tree) parse() {
 	t.Root = t.newList(t.peek().pos)
+	ctx := NewCtx()
+	ctx.Push("root")
+
 	for t.peek().typ != itemEOF {
 		switch t.peek().typ {
 		case itemWord:
-			t.Root.append(t.parseDirective())
+			t.Root.append(t.parseDirective(ctx))
 		case itemNewline:
 			if node := t.parseEmptyLines(); node != nil {
 				t.Root.append(node)
@@ -56,7 +59,7 @@ func (t *Tree) parse() {
 }
 
 // XXX this function currently does not preserve inline comments.
-func (t *Tree) parseDirective() Node {
+func (t *Tree) parseDirective(ctx *context) Node {
 	item := t.next()
 
 	masks, ok := dirMask[item.val]
@@ -79,7 +82,7 @@ Loop:
 			// should parse the entire block until itemRightBlock
 			// should a block node just be a ListNode? Not really because a Block node
 			// I think should know its own context...
-			block := t.parseBlock()
+			block := t.parseBlock(ctx)
 			n.append(block)
 			// A block always terminate a directive!
 			break Loop
@@ -141,7 +144,7 @@ func (t *Tree) parseEmptyLines() Node {
 }
 
 // this is awfully similar to the global parse() method...
-func (t *Tree) parseBlock() Node {
+func (t *Tree) parseBlock(ctx *context) Node {
 	blockStart := t.next()
 	block := t.newBlock(blockStart.pos)
 
@@ -150,7 +153,7 @@ Loop:
 		n := t.peek()
 		switch n.typ {
 		case itemWord:
-			block.append(t.parseDirective())
+			block.append(t.parseDirective(ctx))
 		case itemNewline:
 			if node := t.parseEmptyLines(); node != nil {
 				block.append(node)
