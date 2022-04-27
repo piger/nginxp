@@ -3,7 +3,6 @@ package parse
 import (
 	"fmt"
 	"runtime"
-	"strings"
 )
 
 // Tree is the representation of a single parsed file.
@@ -62,12 +61,6 @@ func (t *Tree) parse() {
 // XXX this function currently does not preserve inline comments.
 func (t *Tree) parseDirective(ctx *context, validate bool) Node {
 	item := t.next()
-
-	// skip validation for ngx_http_js_module as it's not supported by crossplane, which means is
-	// missing from out bitmasks.
-	if strings.HasPrefix(item.val, "js_") || strings.HasPrefix(item.val, "opentracing") || strings.HasPrefix(item.val, "rewrite_by_lua_file") {
-		validate = false
-	}
 
 	masks, ok := dirMask[item.val]
 	if validate && !ok {
