@@ -90,7 +90,7 @@ Loop:
 			// should a block node just be a ListNode? Not really because a Block node
 			// I think should know its own context...
 			var block Node
-			if n.String() == "map" || n.String() == "split_clients" {
+			if n.String() == "map" || n.String() == "split_clients" || n.String() == "geo" {
 				block = t.parseBlockSpecial(ctx, false)
 			} else {
 				block = t.parseBlock(ctx, validate)
