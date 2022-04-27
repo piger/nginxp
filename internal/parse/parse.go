@@ -65,7 +65,7 @@ func (t *Tree) parseDirective(ctx *context, validate bool) Node {
 
 	// skip validation for ngx_http_js_module as it's not supported by crossplane, which means is
 	// missing from out bitmasks.
-	if strings.HasPrefix(item.val, "js_") {
+	if strings.HasPrefix(item.val, "js_") || strings.HasPrefix(item.val, "opentracing") || strings.HasPrefix(item.val, "rewrite_by_lua_file") {
 		validate = false
 	}
 
