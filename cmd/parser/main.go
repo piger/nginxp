@@ -43,6 +43,7 @@ func unpackConfigurationDump(filename string) (map[string]string, error) {
 Loop:
 	for {
 		line, err := r.ReadString('\n')
+		line = strings.ReplaceAll(line, "\r", "")
 		switch {
 		case errors.Is(err, io.EOF):
 			break Loop
