@@ -11,13 +11,12 @@ func printDirective(node *DirectiveNode, indent int) {
 	}
 
 	fmt.Printf("%s", node)
-	mustTerminate := false
+	mustTerminate := true
 
 	for _, x := range node.Args {
 		switch arg := x.(type) {
 		case *ArgumentNode:
 			fmt.Printf(" %s", arg)
-			mustTerminate = true
 		case *BlockNode:
 			fmt.Printf(" {\n")
 			printList(arg.List, indent+4)
