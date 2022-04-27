@@ -191,7 +191,7 @@ Loop:
 // parseBlockSpecial is meant to parse special blocks like "map" and "split_clients".
 func (t *Tree) parseBlockSpecial(ctx *context, validate bool) Node {
 	blockStart := t.next()
-	block := t.newBlock(blockStart.pos)
+	block := t.newFreeformBlock(blockStart.pos)
 
 	var listBlock *ListNode
 Loop:

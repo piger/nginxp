@@ -25,6 +25,14 @@ func printDirective(node *DirectiveNode, indent int) {
 			}
 			fmt.Printf("}\n")
 			mustTerminate = false
+		case *FreeformBlockNode:
+			fmt.Printf(" {\n")
+			printList(arg.List, indent+4)
+			if indent > 0 {
+				fmt.Print(strings.Repeat(" ", indent))
+			}
+			fmt.Printf("}\n")
+			mustTerminate = false
 		}
 	}
 	if mustTerminate {
@@ -44,6 +52,14 @@ func printList(node *ListNode, indent int) {
 			fmt.Println(sub)
 		case *EmptyLineNode:
 			fmt.Println()
+		case *ArgumentNode:
+			if indent > 0 {
+				fmt.Print(strings.Repeat(" ", indent))
+			}
+			fmt.Print(sub)
+		case *ListNode:
+			printList(sub, indent)
+			fmt.Println(";")
 		default:
 			panic("dunno")
 		}
