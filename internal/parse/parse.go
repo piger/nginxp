@@ -84,14 +84,10 @@ Loop:
 		p := t.peek()
 		switch p.typ {
 		case itemWord, itemString:
-			// XXX should itemString be un-quoted before being added as a Node?
 			item := t.next()
 			arg := t.newArgument(item.pos, item.val)
 			n.append(arg)
 		case itemLeftBlock:
-			// should parse the entire block until itemRightBlock
-			// should a block node just be a ListNode? Not really because a Block node
-			// I think should know its own context...
 			var block Node
 			if isFreeFormDirective(dirName) {
 				block = t.parseBlockSpecial(ctx, false)
