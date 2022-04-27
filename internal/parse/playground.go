@@ -67,17 +67,18 @@ func printList(node *ListNode, indent int) {
 }
 
 // LexerPlayground is a "playground" function that showcase the lexer.
-func LexerPlayground(filename, contents string) {
-	lex := lex(filename, contents)
-	for token := range lex.items {
-		if token.val == "\n" {
-			fmt.Println()
-		} else {
-			fmt.Printf("%s (%s)", token.val, token.typ)
+func LexerPlayground(filename, contents string, testLexer bool) {
+	if testLexer {
+		lex := lex(filename, contents)
+		for token := range lex.items {
+			if token.val == "\n" {
+				fmt.Println()
+			} else {
+				fmt.Printf("%s (%s)", token.val, token.typ)
+			}
 		}
+		fmt.Println()
 	}
-
-	fmt.Printf("\n\nPARSER TREE TEST ===>\n")
 
 	t, err := Parse(filename, contents)
 	if err != nil {

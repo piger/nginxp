@@ -16,6 +16,7 @@ import (
 var (
 	magicHeader    = regexp.MustCompile(`^# configuration file ([^:]+):\n$`)
 	defaultSection = "__DEFAULT__"
+	testLexer      = flag.Bool("lex", false, "Show the output of the lexer")
 )
 
 var usage = func() {
@@ -93,7 +94,7 @@ func run() error {
 		if !ok {
 			return fmt.Errorf("section %q not found", section)
 		}
-		parse.LexerPlayground(section, contents)
+		parse.LexerPlayground(section, contents, *testLexer)
 	} else {
 		contents, ok := filesMap[defaultSection]
 		if !ok {
@@ -103,7 +104,7 @@ func run() error {
 			}
 			return errors.New("a configuration dump was read but no section was specified")
 		}
-		parse.LexerPlayground(defaultSection, contents)
+		parse.LexerPlayground(defaultSection, contents, *testLexer)
 	}
 
 	return nil
