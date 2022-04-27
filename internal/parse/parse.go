@@ -84,7 +84,7 @@ Loop:
 			// I think should know its own context...
 			var block Node
 			if n.String() == "map" || n.String() == "split_clients" {
-				block = t.parseBlock(ctx, false)
+				block = t.parseBlockSpecial(ctx, false)
 			} else {
 				block = t.parseBlock(ctx, validate)
 			}
@@ -175,6 +175,44 @@ Loop:
 			break Loop
 		default:
 			t.errorf("unterminated block: %s", t.peek().typ)
+		}
+	}
+
+	return block
+}
+
+// parseBlockSpecial is meant to parse special blocks like "map" and "split_clients".
+func (t *Tree) parseBlockSpecial(ctx *context, validate bool) Node {
+	blockStart := t.next()
+	block := t.newBlock(blockStart.pos)
+
+	var listBlock *ListNode
+Loop:
+	for {
+		n := t.peek()
+		switch n.typ {
+		case itemWord, itemString:
+			thing := t.next()
+			if listBlock == nil {
+				listBlock = t.newList(thing.pos)
+			}
+			listBlock.append(t.newArgument(thing.pos, thing.val))
+		case itemTerminator:
+			t.next()
+			block.append(listBlock)
+			listBlock = nil
+		case itemNewline:
+			if node := t.parseEmptyLines(); node != nil {
+				block.append(node)
+			}
+		case itemComment:
+			item := t.next()
+			block.append(t.newComment(item.pos, item.val))
+		case itemRightBlock:
+			t.next()
+			break Loop
+		default:
+			t.errorf("unterminated special block: %s", t.peek().typ)
 		}
 	}
 
