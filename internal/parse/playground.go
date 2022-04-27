@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+var indentLevel = 4
+
 func printDirective(node *DirectiveNode, indent int) {
 	if indent > 0 {
 		fmt.Print(strings.Repeat(" ", indent))
@@ -19,7 +21,7 @@ func printDirective(node *DirectiveNode, indent int) {
 			fmt.Printf(" %s", arg)
 		case *BlockNode:
 			fmt.Printf(" {\n")
-			printList(arg.List, indent+4)
+			printList(arg.List, indent+indentLevel)
 			if indent > 0 {
 				fmt.Print(strings.Repeat(" ", indent))
 			}
@@ -27,7 +29,7 @@ func printDirective(node *DirectiveNode, indent int) {
 			mustTerminate = false
 		case *FreeformBlockNode:
 			fmt.Printf(" {\n")
-			printList(arg.List, indent+4)
+			printList(arg.List, indent+indentLevel)
 			if indent > 0 {
 				fmt.Print(strings.Repeat(" ", indent))
 			}
