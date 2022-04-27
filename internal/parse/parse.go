@@ -71,7 +71,7 @@ func (t *Tree) parseDirective(ctx *context, validate bool) Node {
 
 	masks, ok := dirMask[item.val]
 	if validate && !ok {
-		t.errorf("invalid directive: %q", item.val)
+		t.errorf("invalid directive: %q (%d/%d)", item.val, item.pos, item.line)
 	}
 
 	n := t.newDirective(item.pos, item.val)
