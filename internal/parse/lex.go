@@ -226,9 +226,26 @@ Loop:
 // lexWord scans a word, which can be a directive or an argument for a directive.
 // A "word" can be terminated by space, ';' or the start of a new block '{'.
 func lexWord(l *lexer) stateFn {
+	// the following variable serves to keep track of interpolated variables that
+	// might be present in a word, such as "a_word_with${variable}".
+	var isVariable bool
+
 Loop:
 	for {
 		switch r := l.next(); {
+		case r == '$':
+			// if a $ sign is followed by '{' then we're dealing with an interpolated variable,
+			// so we can consume the next token.
+			if l.peek() == '{' {
+				isVariable = true
+				l.next()
+			}
+		case r == '}':
+			if isVariable {
+				isVariable = false
+			} else {
+				return l.errorf("unexpected closing bracket (variable interpolation?)")
+			}
 		case isSpace(r) || r == ';' || r == '{':
 			break Loop
 		case r == eof:
