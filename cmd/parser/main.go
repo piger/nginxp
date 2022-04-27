@@ -17,6 +17,7 @@ var (
 	magicHeader    = regexp.MustCompile(`^# configuration file ([^:]+):\n$`)
 	defaultSection = "__DEFAULT__"
 	testLexer      = flag.Bool("lex", false, "Show the output of the lexer")
+	allSections    = flag.Bool("all", false, "Parse all sections in a configuration dump")
 )
 
 var usage = func() {
@@ -89,13 +90,23 @@ func run() error {
 		return err
 	}
 
-	if section != "" {
+	switch {
+	case *allSections:
+		for name, contents := range filesMap {
+			// for now this program doesn't support parsing included map files so we just print them verbatim.
+			if strings.HasSuffix(name, ".map") {
+				fmt.Print(contents)
+			} else {
+				parse.LexerPlayground(name, contents, *testLexer)
+			}
+		}
+	case section != "":
 		contents, ok := filesMap[section]
 		if !ok {
 			return fmt.Errorf("section %q not found", section)
 		}
 		parse.LexerPlayground(section, contents, *testLexer)
-	} else {
+	default:
 		contents, ok := filesMap[defaultSection]
 		if !ok {
 			fmt.Printf("Available sections:\n")
