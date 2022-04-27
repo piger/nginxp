@@ -58,11 +58,21 @@ func (t *Tree) parse() {
 	}
 }
 
+func isFreeFormDirective(name string) bool {
+	for _, d := range []string{"map", "split_clients", "geo", "types", "match"} {
+		if name == d {
+			return true
+		}
+	}
+	return false
+}
+
 // XXX this function currently does not preserve inline comments.
 func (t *Tree) parseDirective(ctx *context, validate bool) Node {
 	item := t.next()
+	dirName := item.val
 
-	masks, ok := dirMask[item.val]
+	masks, ok := dirMask[dirName]
 	if validate && !ok {
 		t.errorf("invalid directive: %q (%d/%d)", item.val, item.pos, item.line)
 	}
@@ -83,7 +93,7 @@ Loop:
 			// should a block node just be a ListNode? Not really because a Block node
 			// I think should know its own context...
 			var block Node
-			if n.String() == "map" || n.String() == "split_clients" || n.String() == "geo" {
+			if isFreeFormDirective(dirName) {
 				block = t.parseBlockSpecial(ctx, false)
 			} else {
 				block = t.parseBlock(ctx, validate)
