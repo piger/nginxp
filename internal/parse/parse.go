@@ -44,7 +44,7 @@ func (t *Tree) parse() {
 	for t.peek().typ != itemEOF {
 		switch t.peek().typ {
 		case itemWord:
-			t.Root.append(t.parseDirective(ctx))
+			t.Root.append(t.parseDirective(ctx, true))
 		case itemNewline:
 			if node := t.parseEmptyLines(); node != nil {
 				t.Root.append(node)
@@ -59,11 +59,11 @@ func (t *Tree) parse() {
 }
 
 // XXX this function currently does not preserve inline comments.
-func (t *Tree) parseDirective(ctx *context) Node {
+func (t *Tree) parseDirective(ctx *context, validate bool) Node {
 	item := t.next()
 
 	masks, ok := dirMask[item.val]
-	if !ok {
+	if validate && !ok {
 		t.errorf("invalid directive: %q", item.val)
 	}
 
@@ -82,7 +82,12 @@ Loop:
 			// should parse the entire block until itemRightBlock
 			// should a block node just be a ListNode? Not really because a Block node
 			// I think should know its own context...
-			block := t.parseBlock(ctx)
+			var block Node
+			if n.String() == "map" || n.String() == "split_clients" {
+				block = t.parseBlock(ctx, false)
+			} else {
+				block = t.parseBlock(ctx, validate)
+			}
 			n.append(block)
 			// A block always terminate a directive!
 			break Loop
@@ -99,6 +104,10 @@ Loop:
 
 	// now that we have built the full node we can perform some validation,
 	// like checking the number of expected arguments and the presence of blocks.
+	if !validate {
+		return n
+	}
+
 	var args int
 	var hasBlock bool
 	for _, a := range n.Args {
@@ -144,7 +153,7 @@ func (t *Tree) parseEmptyLines() Node {
 }
 
 // this is awfully similar to the global parse() method...
-func (t *Tree) parseBlock(ctx *context) Node {
+func (t *Tree) parseBlock(ctx *context, validate bool) Node {
 	blockStart := t.next()
 	block := t.newBlock(blockStart.pos)
 
@@ -153,7 +162,7 @@ Loop:
 		n := t.peek()
 		switch n.typ {
 		case itemWord:
-			block.append(t.parseDirective(ctx))
+			block.append(t.parseDirective(ctx, validate))
 		case itemNewline:
 			if node := t.parseEmptyLines(); node != nil {
 				block.append(node)
