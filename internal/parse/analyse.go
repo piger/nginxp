@@ -1,19 +1,21 @@
 package parse
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Directive struct {
-	Name  string
-	Args  []string
-	Block *Block
+	Name  string   `json:"name"`
+	Args  []string `json:"args"`
+	Block *Block   `json:"block"`
 }
 
 type Block struct {
-	Directives []*Directive
+	Directives []*Directive `json:"directives"`
 }
 
 type Configuration struct {
-	Directives []*Directive
+	Directives []*Directive `json:"directives"`
 }
 
 func (c *Configuration) Analyse(node *ListNode) error {
