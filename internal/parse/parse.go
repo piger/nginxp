@@ -5,6 +5,15 @@ import (
 	"runtime"
 )
 
+var skipValidation map[string]bool
+
+func init() {
+	skipValidation = make(map[string]bool)
+	for _, dirname := range []string{"map", "split_clients", "geo", "types", "match", "access_by_lua_block"} {
+		skipValidation[dirname] = true
+	}
+}
+
 // Tree is the representation of a single parsed file.
 type Tree struct {
 	Filename string    // name of the file represented by this tree.
@@ -58,27 +67,6 @@ func (t *Tree) parse() {
 	}
 }
 
-// isFreeFormDirective is used to determine certain kind of directives for which validation
-// should be skipped, because they are not actual directives but just "arguments" for maps,
-// split_clients, etc.
-func isFreeFormDirective(name string) bool {
-	for _, d := range []string{"map", "split_clients", "geo", "types", "match"} {
-		if name == d {
-			return true
-		}
-	}
-	return false
-}
-
-func isLuaCodeBlockDirective(name string) bool {
-	for _, d := range []string{"access_by_lua_block"} {
-		if name == d {
-			return true
-		}
-	}
-	return false
-}
-
 // XXX this function currently does not preserve inline comments.
 func (t *Tree) parseDirective(ctx *context, validate bool) Node {
 	item := t.next()
@@ -101,13 +89,10 @@ Loop:
 			n.append(arg)
 		case itemLeftBlock:
 			var block Node
-			if isFreeFormDirective(dirName) {
-				// parse "map" and "split_clients" as normal blocks, but don't validate directives;
-				// this allows for parsing of map entries as normal directives.
+
+			// some directives must skip validation because they contain "freeform" text or Lua code.
+			if _, ok := skipValidation[dirName]; ok {
 				block = t.parseBlock(ctx, false)
-			} else if isLuaCodeBlockDirective(dirName) {
-				// TODO: should call a function that just bypass a Lua code block altogether,
-				// or at least it just copy it verbatim
 			} else {
 				block = t.parseBlock(ctx, validate)
 			}
