@@ -11,6 +11,10 @@ func (t NodeType) Type() NodeType {
 	return t
 }
 
+func (t NodeType) String() string {
+	return nodeTypes[t]
+}
+
 const (
 	NodeText      NodeType = iota
 	NodeComment            // A comment.
@@ -21,6 +25,17 @@ const (
 	NodeEmptyLine          // An empty line; will be used for formatting
 	NodeFreeformBlock
 )
+
+var nodeTypes = map[NodeType]string{
+	NodeText:          "NodeText",
+	NodeComment:       "NodeComment",
+	NodeList:          "NodeList",
+	NodeDirective:     "NodeDirective",
+	NodeBlock:         "NodeBlock",
+	NodeArgument:      "NodeArgument",
+	NodeEmptyLine:     "NodeEmptyLine",
+	NodeFreeformBlock: "NodeFreeformBlock",
+}
 
 // Pos represents a byte position in the original input text from which this
 // file was parsed.
