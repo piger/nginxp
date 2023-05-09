@@ -16,8 +16,11 @@ import (
 var (
 	magicHeader    = regexp.MustCompile(`^# configuration file ([^:]+):\n$`)
 	defaultSection = "__DEFAULT__"
-	testLexer      = flag.Bool("lex", false, "Show the output of the lexer")
-	allSections    = flag.Bool("all", false, "Parse all sections in a configuration dump")
+
+	flagTestLexer  = flag.Bool("lex", false, "Show the output of the lexer")
+	flagAllSection = flag.Bool("all", false, "Parse all sections in a configuration dump")
+	flagPlayground = flag.Bool("play", false, "Call the playground function")
+	flagStuff      = flag.Bool("stuff", false, "Run testing stuff")
 )
 
 var usage = func() {
@@ -91,13 +94,13 @@ func run() error {
 	}
 
 	switch {
-	case *allSections:
+	case *flagAllSection:
 		for name, contents := range filesMap {
 			// for now this program doesn't support parsing included map files so we just print them verbatim.
 			if strings.HasSuffix(name, ".map") {
 				fmt.Print(contents)
 			} else {
-				parse.LexerPlayground(name, contents, *testLexer)
+				return play(name, contents)
 			}
 		}
 	case section != "":
@@ -105,7 +108,7 @@ func run() error {
 		if !ok {
 			return fmt.Errorf("section %q not found", section)
 		}
-		parse.LexerPlayground(section, contents, *testLexer)
+		return play(section, contents)
 	default:
 		contents, ok := filesMap[defaultSection]
 		if !ok {
@@ -115,10 +118,19 @@ func run() error {
 			}
 			return errors.New("a configuration dump was read but no section was specified")
 		}
-		parse.LexerPlayground(defaultSection, contents, *testLexer)
+		return play(defaultSection, contents)
 	}
 
 	return nil
+}
+
+func play(filename string, contents string) error {
+	if *flagPlayground {
+		parse.LexerPlayground(filename, contents, *flagTestLexer)
+		return nil
+	} else {
+		return parse.Analyse(filename, contents)
+	}
 }
 
 func main() {
