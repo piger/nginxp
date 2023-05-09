@@ -67,6 +67,15 @@ func isFreeFormDirective(name string) bool {
 	return false
 }
 
+func isLuaCodeBlockDirective(name string) bool {
+	for _, d := range []string{"access_by_lua_block"} {
+		if name == d {
+			return true
+		}
+	}
+	return false
+}
+
 // XXX this function currently does not preserve inline comments.
 func (t *Tree) parseDirective(ctx *context, validate bool) Node {
 	item := t.next()
@@ -91,6 +100,9 @@ Loop:
 			var block Node
 			if isFreeFormDirective(dirName) {
 				block = t.parseBlockSpecial(ctx, false)
+			} else if isLuaCodeBlockDirective(dirName) {
+				// TODO: should call a function that just bypass a Lua code block altogether,
+				// or at least it just copy it verbatim
 			} else {
 				block = t.parseBlock(ctx, validate)
 			}
