@@ -23,18 +23,16 @@ const (
 	NodeBlock              // A configuration block
 	NodeArgument           // An argument for a directive
 	NodeEmptyLine          // An empty line; will be used for formatting
-	NodeFreeformBlock
 )
 
 var nodeTypes = map[NodeType]string{
-	NodeText:          "NodeText",
-	NodeComment:       "NodeComment",
-	NodeList:          "NodeList",
-	NodeDirective:     "NodeDirective",
-	NodeBlock:         "NodeBlock",
-	NodeArgument:      "NodeArgument",
-	NodeEmptyLine:     "NodeEmptyLine",
-	NodeFreeformBlock: "NodeFreeformBlock",
+	NodeText:      "NodeText",
+	NodeComment:   "NodeComment",
+	NodeList:      "NodeList",
+	NodeDirective: "NodeDirective",
+	NodeBlock:     "NodeBlock",
+	NodeArgument:  "NodeArgument",
+	NodeEmptyLine: "NodeEmptyLine",
 }
 
 // Pos represents a byte position in the original input text from which this
@@ -223,32 +221,4 @@ func (b *BlockNode) Copy() Node {
 
 func (b *BlockNode) append(node Node) {
 	b.List.append(node)
-}
-
-type FreeformBlockNode struct {
-	NodeType
-	Pos
-	tr   *Tree
-	List *ListNode
-}
-
-func (t *Tree) newFreeformBlock(pos Pos) *FreeformBlockNode {
-	l := t.newList(pos)
-	return &FreeformBlockNode{tr: t, NodeType: NodeFreeformBlock, Pos: pos, List: l}
-}
-
-func (f *FreeformBlockNode) String() string {
-	return ""
-}
-
-func (f *FreeformBlockNode) tree() *Tree {
-	return f.tr
-}
-
-func (f *FreeformBlockNode) Copy() Node {
-	panic("not implemented")
-}
-
-func (f *FreeformBlockNode) append(node Node) {
-	f.List.append(node)
 }

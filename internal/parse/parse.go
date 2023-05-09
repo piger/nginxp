@@ -58,6 +58,9 @@ func (t *Tree) parse() {
 	}
 }
 
+// isFreeFormDirective is used to determine certain kind of directives for which validation
+// should be skipped, because they are not actual directives but just "arguments" for maps,
+// split_clients, etc.
 func isFreeFormDirective(name string) bool {
 	for _, d := range []string{"map", "split_clients", "geo", "types", "match"} {
 		if name == d {
@@ -99,7 +102,9 @@ Loop:
 		case itemLeftBlock:
 			var block Node
 			if isFreeFormDirective(dirName) {
-				block = t.parseBlockSpecial(ctx, false)
+				// parse "map" and "split_clients" as normal blocks, but don't validate directives;
+				// this allows for parsing of map entries as normal directives.
+				block = t.parseBlock(ctx, false)
 			} else if isLuaCodeBlockDirective(dirName) {
 				// TODO: should call a function that just bypass a Lua code block altogether,
 				// or at least it just copy it verbatim
@@ -193,44 +198,6 @@ Loop:
 			break Loop
 		default:
 			t.errorf("unterminated block: %s", t.peek().typ)
-		}
-	}
-
-	return block
-}
-
-// parseBlockSpecial is meant to parse special blocks like "map" and "split_clients".
-func (t *Tree) parseBlockSpecial(ctx *context, validate bool) Node {
-	blockStart := t.next()
-	block := t.newFreeformBlock(blockStart.pos)
-
-	var listBlock *ListNode
-Loop:
-	for {
-		n := t.peek()
-		switch n.typ {
-		case itemWord, itemString:
-			thing := t.next()
-			if listBlock == nil {
-				listBlock = t.newList(thing.pos)
-			}
-			listBlock.append(t.newArgument(thing.pos, thing.val))
-		case itemTerminator:
-			t.next()
-			block.append(listBlock)
-			listBlock = nil
-		case itemNewline:
-			if node := t.parseEmptyLines(); node != nil {
-				block.append(node)
-			}
-		case itemComment:
-			item := t.next()
-			block.append(t.newComment(item.pos, item.val))
-		case itemRightBlock:
-			t.next()
-			break Loop
-		default:
-			t.errorf("unterminated special block: %s", t.peek().typ)
 		}
 	}
 

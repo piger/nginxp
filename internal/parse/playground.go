@@ -27,14 +27,6 @@ func printDirective(node *DirectiveNode, indent int) {
 			}
 			fmt.Printf("}\n")
 			mustTerminate = false
-		case *FreeformBlockNode:
-			fmt.Printf(" {\n")
-			printList(arg.List, indent+indentLevel)
-			if indent > 0 {
-				fmt.Print(strings.Repeat(" ", indent))
-			}
-			fmt.Printf("}\n")
-			mustTerminate = false
 		}
 	}
 	if mustTerminate {
