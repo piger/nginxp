@@ -22,7 +22,7 @@ func (c *Configuration) Analyse(node *ListNode) error {
 	for _, nodeRaw := range node.Nodes {
 		switch node := nodeRaw.(type) {
 		case *DirectiveNode:
-			d, err := c.iterateDirective(node.String(), node)
+			d, err := c.iterateDirective(node)
 			if err != nil {
 				return err
 			}
@@ -36,8 +36,9 @@ func (c *Configuration) Analyse(node *ListNode) error {
 	return nil
 }
 
-func (c *Configuration) iterateDirective(name string, node *DirectiveNode) (*Directive, error) {
-	d := &Directive{Name: name}
+func (c *Configuration) iterateDirective(node *DirectiveNode) (*Directive, error) {
+	d := &Directive{Name: node.String()}
+
 	for _, argRaw := range node.Args {
 		switch arg := argRaw.(type) {
 		case *ArgumentNode:
@@ -58,7 +59,7 @@ func (c *Configuration) iterateBlock(node *BlockNode) (*Block, error) {
 	for _, nodeRaw := range node.List.Nodes {
 		switch subNode := nodeRaw.(type) {
 		case *DirectiveNode:
-			d, err := c.iterateDirective(subNode.String(), subNode)
+			d, err := c.iterateDirective(subNode)
 			if err != nil {
 				return nil, err
 			}
