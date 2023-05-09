@@ -2,13 +2,6 @@ package parse
 
 import "fmt"
 
-type Section struct {
-	Name       string
-	Sections   []*Section
-	Directives []*Directive // I'd use a map, but what about directive with a non-unique name like "if"?
-	Args       []string     // used only by locations
-}
-
 type Directive struct {
 	Name  string
 	Args  []string
@@ -20,17 +13,10 @@ type Block struct {
 }
 
 type Configuration struct {
-	Sections []*Section
+	Directives []*Directive
 }
 
-func (c *Configuration) Analyse(section string, node *ListNode) error {
-	s := &Section{Name: section}
-	c.Sections = append(c.Sections, s)
-
-	// PROBLEM:
-	// a "location" is being considered both a section and a directive; the effect of this
-	// is that we end up with a location (directive) with no block, and the same location also
-	// as a section, with no args.
+func (c *Configuration) Analyse(node *ListNode) error {
 	for _, nodeRaw := range node.Nodes {
 		switch node := nodeRaw.(type) {
 		case *DirectiveNode:
@@ -38,14 +24,11 @@ func (c *Configuration) Analyse(section string, node *ListNode) error {
 			if err != nil {
 				return err
 			}
-			s.Directives = append(s.Directives, d)
-		case *ListNode:
-			panic("what now?")
-		case *CommentNode:
-		case *EmptyLineNode:
+			c.Directives = append(c.Directives, d)
+		case *CommentNode, *EmptyLineNode:
+			continue
 		default:
-			fmt.Printf("%+v\n", node)
-			panic("very unexpected")
+			panic(fmt.Sprintf("Unhandled node type: %s\n", node.Type()))
 		}
 	}
 	return nil
@@ -63,9 +46,6 @@ func (c *Configuration) iterateDirective(name string, node *DirectiveNode) (*Dir
 				return nil, err
 			}
 			d.Block = b
-		case *FreeformBlockNode:
-			// panic("not implemented")
-			fmt.Println("skipping freeform")
 		}
 	}
 	return d, nil
@@ -81,17 +61,17 @@ func (c *Configuration) iterateBlock(node *BlockNode) (*Block, error) {
 				return nil, err
 			}
 			b.Directives = append(b.Directives, d)
-		case *CommentNode:
-		case *EmptyLineNode:
+		case *CommentNode, *EmptyLineNode:
+			continue
 		default:
-			panic("unexpected!")
+			panic(fmt.Sprintf("unexpected node type in block: %s\n", subNode.Type()))
 		}
 	}
 	return b, nil
 }
 
 func printOneDirective(directive *Directive) {
-	fmt.Printf("directive: %+v\n", directive)
+	fmt.Printf("directive: Name=%s, Args=%q, Block? (%v)\n", directive.Name, directive.Args, directive.Block != nil)
 	if directive.Block != nil {
 		for _, d := range directive.Block.Directives {
 			printOneDirective(d)
@@ -106,16 +86,12 @@ func Analyse(filename, contents string) error {
 	}
 
 	cfg := Configuration{}
-	if err := cfg.Analyse("main", t.Root); err != nil {
+	if err := cfg.Analyse(t.Root); err != nil {
 		return err
 	}
 
-	for _, section := range cfg.Sections {
-		fmt.Printf("section: %q\n", section.Name)
-
-		for _, directive := range section.Directives {
-			printOneDirective(directive)
-		}
+	for _, directive := range cfg.Directives {
+		printOneDirective(directive)
 	}
 
 	return nil
