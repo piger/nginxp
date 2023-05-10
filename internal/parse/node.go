@@ -23,6 +23,7 @@ const (
 	NodeBlock              // A configuration block
 	NodeArgument           // An argument for a directive
 	NodeEmptyLine          // An empty line; will be used for formatting
+	NodeLua                // A node containing Lua code
 )
 
 var nodeTypes = map[NodeType]string{
@@ -33,6 +34,7 @@ var nodeTypes = map[NodeType]string{
 	NodeBlock:     "NodeBlock",
 	NodeArgument:  "NodeArgument",
 	NodeEmptyLine: "NodeEmptyLine",
+	NodeLua:       "NodeLua",
 }
 
 // Pos represents a byte position in the original input text from which this
@@ -221,4 +223,29 @@ func (b *BlockNode) Copy() Node {
 
 func (b *BlockNode) append(node Node) {
 	b.List.append(node)
+}
+
+type BlockLua struct {
+	NodeType
+	Pos
+	tr    *Tree
+	Lines []string
+}
+
+func (t *Tree) newBlockLua(pos Pos) *BlockLua {
+	return &BlockLua{tr: t, NodeType: NodeLua, Pos: pos}
+}
+
+func (bl *BlockLua) String() string {
+	return ""
+}
+
+func (bl *BlockLua) tree() *Tree {
+	return bl.tr
+}
+
+func (bl *BlockLua) Copy() Node {
+	n := &BlockLua{tr: bl.tr, NodeType: NodeLua, Pos: bl.Pos, Lines: make([]string, len(bl.Lines))}
+	copy(n.Lines, bl.Lines)
+	return n
 }

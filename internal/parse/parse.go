@@ -9,7 +9,7 @@ var skipValidation map[string]bool
 
 func init() {
 	skipValidation = make(map[string]bool)
-	for _, dirname := range []string{"map", "split_clients", "geo", "types", "match", "access_by_lua_block"} {
+	for _, dirname := range []string{"map", "split_clients", "geo", "types", "match"} {
 		skipValidation[dirname] = true
 	}
 }
@@ -99,6 +99,8 @@ Loop:
 			// some directives must skip validation because they contain "freeform" text or Lua code.
 			if _, ok := skipValidation[dirName]; ok {
 				block = t.parseBlock(ctx, false)
+			} else if dirName == "access_by_lua_block" {
+				block = t.parseLua(ctx)
 			} else {
 				block = t.parseBlock(ctx, validate)
 			}
@@ -212,6 +214,34 @@ Loop:
 			break Loop
 		default:
 			t.errorf("unterminated block: %s", t.peek().typ)
+		}
+	}
+
+	return block
+}
+
+// parseLua don't really parse Lua code blocks (like "access_by_lua_block"), because the
+// lexer is not capable of distinguishing between the nginx configuration and Lua code.
+func (t *Tree) parseLua(ctx *context) Node {
+	blockStart := t.next()
+	block := t.newBlockLua(blockStart.pos)
+	parensCounter := 1 // count from 1 because of the t.next() above that consumes the first '{'.
+
+Loop:
+	for {
+		n := t.peek()
+		switch n.typ {
+		case itemLeftBlock:
+			parensCounter++
+			t.next()
+		case itemRightBlock:
+			parensCounter--
+			t.next()
+			if parensCounter == 0 {
+				break Loop
+			}
+		default:
+			t.next()
 		}
 	}
 
