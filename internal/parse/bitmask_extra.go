@@ -21,4 +21,5 @@ func init() {
 	// https://github.com/openresty/lua-nginx-module
 	dirMask["rewrite_by_lua_file"] = []int{NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LIF_CONF | NGX_CONF_TAKE1}
 	dirMask["access_by_lua_file"] = []int{NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LIF_CONF | NGX_CONF_TAKE1}
+	dirMask["access_by_lua_block"] = []int{NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LIF_CONF | NGX_CONF_BLOCK}
 }
