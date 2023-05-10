@@ -198,7 +198,7 @@ Loop:
 	for {
 		n := t.peek()
 		switch n.typ {
-		case itemWord:
+		case itemWord, itemString:
 			block.append(t.parseDirective(ctx, validate))
 		case itemNewline:
 			if node := t.parseEmptyLines(); node != nil {
