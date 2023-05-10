@@ -64,7 +64,7 @@ func (t *Tree) parse() {
 			item := t.next()
 			t.Root.append(t.newComment(item.pos, item.val))
 		default:
-			t.errorf("unexpected item in parse: %s", t.peek().typ)
+			t.errorf("unexpected item at line %d: %s", t.lineno, t.peek().typ)
 		}
 	}
 }
@@ -76,7 +76,7 @@ func (t *Tree) parseDirective(ctx *context, validate bool) Node {
 
 	masks, ok := dirMask[dirName]
 	if validate && !ok {
-		t.errorf("invalid directive: %q (%d/%d)", item.val, item.pos, item.line)
+		t.errorf("invalid directive at line %d: %q (%d/%d)", t.lineno, item.val, item.pos, item.line)
 	}
 
 	n := t.newDirective(item.pos, item.val)
@@ -119,7 +119,7 @@ Loop:
 			// XXX newlines found while scanning a directive should be safe to ignore.
 			t.next()
 		default:
-			t.errorf("unterminated directive: found %s", p.typ)
+			t.errorf("unterminated directive at line %d: found %s", t.lineno, p.typ)
 		}
 	}
 
@@ -213,7 +213,7 @@ Loop:
 			t.next()
 			break Loop
 		default:
-			t.errorf("unterminated block: %s", t.peek().typ)
+			t.errorf("unterminated block at line %d: %s", t.lineno, t.peek().typ)
 		}
 	}
 
@@ -305,7 +305,7 @@ func Parse(name, text string) (*Tree, error) {
 
 	_, err := t.Parse(text)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return t, nil
