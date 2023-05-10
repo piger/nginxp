@@ -140,10 +140,6 @@ Loop:
 		}
 	}
 
-	if !t.validateDirectiveContext(dirName, masks, ctx) {
-		t.errorf("wrong context for %q: %s", dirName, ConfContextName(ctx.curContext()))
-	}
-
 	for _, mask := range masks {
 		if mask&NGX_CONF_TAKE1 == 1 && args > 1 {
 			t.errorf("invalid number of arguments for %q", n)
