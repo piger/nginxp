@@ -80,6 +80,33 @@ var contextBitmask = map[confContext]int{
 	contextHttpLocationLimitExcept: NGX_HTTP_LMT_CONF,
 }
 
+var contextNames = map[confContext]string{
+	contextRoot:                    "NGX_MAIN_CONF",
+	contextEvents:                  "NGX_EVENT_CONF",
+	contextMail:                    "NGX_MAIL_MAIN_CONF",
+	contextMailServer:              "NGX_MAIL_SRV_CONF",
+	contextStream:                  "NGX_STREAM_MAIN_CONF",
+	contextStreamServer:            "NGX_STREAM_SRV_CONF",
+	contextStreamUpstream:          "NGX_STREAM_UPS_CONF",
+	contextHttp:                    "NGX_HTTP_MAIN_CONF",
+	contextHttpServer:              "NGX_HTTP_SRV_CONF",
+	contextHttpLocation:            "NGX_HTTP_LOC_CONF",
+	contextHttpUpstream:            "NGX_HTTP_UPS_CONF",
+	contextHttpServerIf:            "NGX_HTTP_SIF_CONF",
+	contextHttpLocationIf:          "NGX_HTTP_LIF_CONF",
+	contextHttpLocationLimitExcept: "NGX_HTTP_LMT_CONF",
+}
+
+func (c confContext) String() string {
+	if name, ok := contextNames[c]; ok {
+		return name
+	}
+	return "UNKNOWN"
+}
+
+// context is a stack that keeps track of the current context; it is used by the parser
+// while navigating the tree (the configuration file). Each time the parser steps into a
+// directive whose name appears in `ctxLevels`, it must call Push().
 type context map[string]bool
 
 var ctxLevels = []string{"root", "events", "mail", "server", "stream", "upstream", "http", "location", "if", "limit_except"}
@@ -92,6 +119,12 @@ func NewCtx() *context {
 	return &c
 }
 
+func (c context) IsContext(dirname string) bool {
+	_, ok := c[dirname]
+	return ok
+}
+
+// Push should be called before parsing a directive's block.
 func (c context) Push(level string) {
 	if _, ok := c[level]; !ok {
 		panic(fmt.Sprintf("unknown context level %q", level))
@@ -99,6 +132,7 @@ func (c context) Push(level string) {
 	c[level] = true
 }
 
+// Pop should be called after parsing a directive's block.
 func (c context) Pop(level string) {
 	if _, ok := c[level]; !ok {
 		panic(fmt.Sprintf("unknown context level %q", level))
@@ -106,6 +140,8 @@ func (c context) Pop(level string) {
 	c[level] = false
 }
 
+// ID (badly named) return the current context; to determine the current context we check
+// which contexts have been "activated" in the stack.
 func (c context) ID() confContext {
 	switch {
 	case c["events"]:

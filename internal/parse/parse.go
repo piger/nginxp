@@ -90,6 +90,10 @@ Loop:
 		case itemLeftBlock:
 			var block Node
 
+			if ctx.IsContext(dirName) {
+				ctx.Push(dirName)
+			}
+
 			// some directives must skip validation because they contain "freeform" text or Lua code.
 			if _, ok := skipValidation[dirName]; ok {
 				block = t.parseBlock(ctx, false)
@@ -97,6 +101,11 @@ Loop:
 				block = t.parseBlock(ctx, validate)
 			}
 			n.append(block)
+
+			if ctx.IsContext(dirName) {
+				ctx.Pop(dirName)
+			}
+
 			// A block always terminate a directive!
 			break Loop
 		case itemTerminator:
@@ -127,6 +136,10 @@ Loop:
 		}
 	}
 
+	if !t.validateDirectiveContext(dirName, masks, ctx) {
+		t.errorf("wrong context for %q: %s", dirName, ctx.ID())
+	}
+
 	for _, mask := range masks {
 		if mask&NGX_CONF_TAKE1 == 1 && args > 1 {
 			t.errorf("invalid number of arguments for %q", n)
@@ -138,6 +151,23 @@ Loop:
 	}
 
 	return n
+}
+
+// validateDirectiveContext checks if a directive belongs to the right context; for example
+// a "location" can't be in the "http" context.
+func (t *Tree) validateDirectiveContext(name string, masks []int, ctx *context) bool {
+	ctxBitmap, ok := contextBitmask[ctx.ID()]
+	if !ok {
+		t.errorf("unknown context for directive: %q", name)
+	}
+
+	for _, mask := range masks {
+		if mask&ctxBitmap > 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 // parseEmptyLines parse one or more newlines; it only emits a EmptyLineNode
