@@ -137,7 +137,7 @@ Loop:
 	}
 
 	if !t.validateDirectiveContext(dirName, masks, ctx) {
-		t.errorf("wrong context for %q: %s", dirName, ctx.ID())
+		t.errorf("wrong context for %q: %s", dirName, ConfContextName(ctx.curContext()))
 	}
 
 	for _, mask := range masks {
@@ -156,13 +156,8 @@ Loop:
 // validateDirectiveContext checks if a directive belongs to the right context; for example
 // a "location" can't be in the "http" context.
 func (t *Tree) validateDirectiveContext(name string, masks []int, ctx *context) bool {
-	ctxBitmap, ok := contextBitmask[ctx.ID()]
-	if !ok {
-		t.errorf("unknown context for directive: %q", name)
-	}
-
 	for _, mask := range masks {
-		if mask&ctxBitmap > 0 {
+		if mask&ctx.curContext() > 0 {
 			return true
 		}
 	}

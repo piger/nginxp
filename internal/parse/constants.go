@@ -44,60 +44,24 @@ const eof = -1
 
 type confContext int
 
-// These contexts maps to: https://github.com/nginxinc/crossplane/blob/ad3d23094bbd8b1f5586b48b883b2e48d6587e49/crossplane/analyzer.py#L2095
-// Their purpose is to be used with the map that follows to associate a context with a bitmask.
-const (
-	contextRoot                    confContext = iota // main configuration section
-	contextEvents                                     // events
-	contextMail                                       // mail
-	contextMailServer                                 // mail -> server
-	contextStream                                     // stream
-	contextStreamServer                               // stream -> server
-	contextStreamUpstream                             // stream -> upstream
-	contextHttp                                       // http
-	contextHttpServer                                 // http -> server
-	contextHttpLocation                               // http -> location
-	contextHttpUpstream                               // http -> upstream
-	contextHttpServerIf                               // http -> server -> if
-	contextHttpLocationIf                             // http -> location -> if
-	contextHttpLocationLimitExcept                    // http -> location -> limit_except
-)
-
-var contextBitmask = map[confContext]int{
-	contextRoot:                    NGX_MAIN_CONF,
-	contextEvents:                  NGX_EVENT_CONF,
-	contextMail:                    NGX_MAIL_MAIN_CONF,
-	contextMailServer:              NGX_MAIL_SRV_CONF,
-	contextStream:                  NGX_STREAM_MAIN_CONF,
-	contextStreamServer:            NGX_STREAM_SRV_CONF,
-	contextStreamUpstream:          NGX_STREAM_UPS_CONF,
-	contextHttp:                    NGX_HTTP_MAIN_CONF,
-	contextHttpServer:              NGX_HTTP_SRV_CONF,
-	contextHttpLocation:            NGX_HTTP_LOC_CONF,
-	contextHttpUpstream:            NGX_HTTP_UPS_CONF,
-	contextHttpServerIf:            NGX_HTTP_SIF_CONF,
-	contextHttpLocationIf:          NGX_HTTP_LIF_CONF,
-	contextHttpLocationLimitExcept: NGX_HTTP_LMT_CONF,
+var contextNames = map[int]string{
+	NGX_MAIN_CONF:        "NGX_MAIN_CONF",
+	NGX_EVENT_CONF:       "NGX_EVENT_CONF",
+	NGX_MAIL_MAIN_CONF:   "NGX_MAIL_MAIN_CONF",
+	NGX_MAIL_SRV_CONF:    "NGX_MAIL_SRV_CONF",
+	NGX_STREAM_MAIN_CONF: "NGX_STREAM_MAIN_CONF",
+	NGX_STREAM_SRV_CONF:  "NGX_STREAM_SRV_CONF",
+	NGX_STREAM_UPS_CONF:  "NGX_STREAM_UPS_CONF",
+	NGX_HTTP_MAIN_CONF:   "NGX_HTTP_MAIN_CONF",
+	NGX_HTTP_SRV_CONF:    "NGX_HTTP_SRV_CONF",
+	NGX_HTTP_LOC_CONF:    "NGX_HTTP_LOC_CONF",
+	NGX_HTTP_UPS_CONF:    "NGX_HTTP_UPS_CONF",
+	NGX_HTTP_SIF_CONF:    "NGX_HTTP_SIF_CONF",
+	NGX_HTTP_LIF_CONF:    "NGX_HTTP_LIF_CONF",
+	NGX_HTTP_LMT_CONF:    "NGX_HTTP_LMT_CONF",
 }
 
-var contextNames = map[confContext]string{
-	contextRoot:                    "NGX_MAIN_CONF",
-	contextEvents:                  "NGX_EVENT_CONF",
-	contextMail:                    "NGX_MAIL_MAIN_CONF",
-	contextMailServer:              "NGX_MAIL_SRV_CONF",
-	contextStream:                  "NGX_STREAM_MAIN_CONF",
-	contextStreamServer:            "NGX_STREAM_SRV_CONF",
-	contextStreamUpstream:          "NGX_STREAM_UPS_CONF",
-	contextHttp:                    "NGX_HTTP_MAIN_CONF",
-	contextHttpServer:              "NGX_HTTP_SRV_CONF",
-	contextHttpLocation:            "NGX_HTTP_LOC_CONF",
-	contextHttpUpstream:            "NGX_HTTP_UPS_CONF",
-	contextHttpServerIf:            "NGX_HTTP_SIF_CONF",
-	contextHttpLocationIf:          "NGX_HTTP_LIF_CONF",
-	contextHttpLocationLimitExcept: "NGX_HTTP_LMT_CONF",
-}
-
-func (c confContext) String() string {
+func ConfContextName(c int) string {
 	if name, ok := contextNames[c]; ok {
 		return name
 	}
@@ -140,38 +104,38 @@ func (c context) Pop(level string) {
 	c[level] = false
 }
 
-// ID (badly named) return the current context; to determine the current context we check
-// which contexts have been "activated" in the stack.
-func (c context) ID() confContext {
+// curContext return the current context; to determine the current context we check which contexts
+// have been "activated" in the stack.
+func (c context) curContext() int {
 	switch {
 	case c["events"]:
-		return contextEvents
+		return NGX_EVENT_CONF
 	case c["mail"] && c["server"]:
-		return contextMailServer
+		return NGX_MAIL_SRV_CONF
 	case c["mail"]:
-		return contextMail
+		return NGX_MAIL_MAIN_CONF
 	case c["stream"] && c["upstream"]:
-		return contextStreamUpstream
+		return NGX_STREAM_UPS_CONF
 	case c["stream"] && c["server"]:
-		return contextStreamServer
+		return NGX_STREAM_SRV_CONF
 	case c["stream"]:
-		return contextStream
+		return NGX_STREAM_MAIN_CONF
 	case c["http"] && c["location"] && c["limit_except"]:
-		return contextHttpLocationLimitExcept
+		return NGX_HTTP_LMT_CONF
 	case c["http"] && c["location"] && c["if"]:
-		return contextHttpLocationIf
+		return NGX_HTTP_LIF_CONF
 	case c["http"] && c["server"] && c["if"]:
-		return contextHttpServerIf
+		return NGX_HTTP_SIF_CONF
 	case c["http"] && c["upstream"]:
-		return contextHttpUpstream
+		return NGX_HTTP_UPS_CONF
 	case c["http"] && c["location"]:
-		return contextHttpLocation
+		return NGX_HTTP_LOC_CONF
 	case c["http"] && c["server"]:
-		return contextHttpServer
+		return NGX_HTTP_SRV_CONF
 	case c["http"]:
-		return contextHttp
+		return NGX_HTTP_MAIN_CONF
 	case c["root"]:
-		return contextRoot
+		return NGX_MAIN_CONF
 	}
 	panic("no context")
 }
