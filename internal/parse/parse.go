@@ -19,6 +19,7 @@ type Tree struct {
 	Filename string    // name of the file represented by this tree.
 	Root     *ListNode // top-level root of the tree.
 	text     string    // text parsed to create this Tree.
+	lineno   int       // keep track of the current line number
 	// Parsing only; cleared after parse.
 	lex       *lexer
 	token     [3]item // three-token lookahead for parser.
@@ -28,6 +29,7 @@ type Tree struct {
 func (t *Tree) startParse(lex *lexer) {
 	t.Root = nil
 	t.lex = lex
+	t.lineno = 1
 }
 
 func (t *Tree) stopParse() {
@@ -173,10 +175,12 @@ func (t *Tree) validateDirectiveContext(name string, masks []int, ctx *context) 
 func (t *Tree) parseEmptyLines() Node {
 	var res Node
 	this := t.next()
+	t.lineno++
 
 	for t.peek().typ == itemNewline {
 		// discard all following newlines, but ensure we return at least one.
 		t.next()
+		t.lineno++
 		if res == nil {
 			res = t.newEmptyLine(this.pos)
 		}
