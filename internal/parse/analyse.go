@@ -4,36 +4,44 @@ import (
 	"fmt"
 )
 
+// Directive contains a single nginx configuration directive; it has a number of optional
+// Args, according to the bitmask in bitmask.go, and an optional Block.
 type Directive struct {
 	Name  string       `json:"name"`
 	Args  []string     `json:"args"`
 	Block []*Directive `json:"block,omitempty"`
 }
 
+// Configuration contains the nginx configuration from a single configuration file.
 type Configuration struct {
 	Filename   string       `json:"filename"`
 	Directives []*Directive `json:"directives"`
 }
 
-func (c *Configuration) ParseTree(tree *Tree) error {
+// NewConfiguration creates a Configuration from a parsed Tree.
+func NewConfiguration(tree *Tree) (*Configuration, error) {
+	cfg := &Configuration{
+		Filename: tree.Filename,
+	}
+
 	for _, nodeRaw := range tree.Root.Nodes {
 		switch node := nodeRaw.(type) {
 		case *DirectiveNode:
-			d, err := c.iterateDirective(node)
+			d, err := iterateDirective(node)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			c.Directives = append(c.Directives, d)
+			cfg.Directives = append(cfg.Directives, d)
 		case *CommentNode, *EmptyLineNode:
 			continue
 		default:
 			panic(fmt.Sprintf("Unhandled node type: %s\n", node.Type()))
 		}
 	}
-	return nil
+	return cfg, nil
 }
 
-func (c *Configuration) iterateDirective(node *DirectiveNode) (*Directive, error) {
+func iterateDirective(node *DirectiveNode) (*Directive, error) {
 	d := &Directive{Name: node.String(), Args: []string{}}
 
 	for _, argRaw := range node.Args {
@@ -41,7 +49,7 @@ func (c *Configuration) iterateDirective(node *DirectiveNode) (*Directive, error
 		case *ArgumentNode:
 			d.Args = append(d.Args, arg.String())
 		case *BlockNode:
-			dirs, err := c.iterateBlock(arg)
+			dirs, err := iterateBlock(arg)
 			if err != nil {
 				return nil, err
 			}
@@ -51,13 +59,13 @@ func (c *Configuration) iterateDirective(node *DirectiveNode) (*Directive, error
 	return d, nil
 }
 
-func (c *Configuration) iterateBlock(node *BlockNode) ([]*Directive, error) {
+func iterateBlock(node *BlockNode) ([]*Directive, error) {
 	var dirs []*Directive
 
 	for _, nodeRaw := range node.List.Nodes {
 		switch subNode := nodeRaw.(type) {
 		case *DirectiveNode:
-			d, err := c.iterateDirective(subNode)
+			d, err := iterateDirective(subNode)
 			if err != nil {
 				return nil, err
 			}
@@ -69,31 +77,4 @@ func (c *Configuration) iterateBlock(node *BlockNode) ([]*Directive, error) {
 		}
 	}
 	return dirs, nil
-}
-
-func printOneDirective(directive *Directive) {
-	fmt.Printf("directive: Name=%s, Args=%q, Block? (%v)\n", directive.Name, directive.Args, len(directive.Block) > 0)
-	if directive.Block != nil {
-		for _, d := range directive.Block {
-			printOneDirective(d)
-		}
-	}
-}
-
-func Analyse(filename, contents string) error {
-	t, err := Parse(filename, contents)
-	if err != nil {
-		return err
-	}
-
-	cfg := Configuration{Filename: filename}
-	if err := cfg.ParseTree(t); err != nil {
-		return err
-	}
-
-	for _, directive := range cfg.Directives {
-		printOneDirective(directive)
-	}
-
-	return nil
 }

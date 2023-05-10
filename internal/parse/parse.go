@@ -293,6 +293,7 @@ func (t *Tree) error(err error) {
 	t.errorf("%s", err)
 }
 
+// Parse creates a parse tree by lexing the contents of text.
 func Parse(name, text string) (*Tree, error) {
 	t := &Tree{
 		Filename: name,
