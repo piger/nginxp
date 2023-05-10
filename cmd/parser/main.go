@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -129,8 +130,24 @@ func play(filename string, contents string) error {
 		parse.LexerPlayground(filename, contents, *flagTestLexer)
 		return nil
 	} else {
-		return parse.Analyse(filename, contents)
+		tree, err := parse.Parse(filename, contents)
+		if err != nil {
+			return err
+		}
+
+		cfg, err := parse.NewConfiguration(tree)
+		if err != nil {
+			return err
+		}
+
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(cfg); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 func main() {
