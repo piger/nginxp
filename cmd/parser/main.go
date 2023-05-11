@@ -1,23 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/piger/nginxp/internal/parse"
 )
 
 var (
-	magicHeader    = regexp.MustCompile(`^# configuration file ([^:]+):\n$`)
-	defaultSection = "__DEFAULT__"
-
 	flagTestLexer  = flag.Bool("lex", false, "Show the output of the lexer")
 	flagAllSection = flag.Bool("all", false, "Parse all sections in a configuration dump")
 	flagPlayground = flag.Bool("play", false, "Call the playground function")
@@ -27,54 +21,6 @@ var (
 var usage = func() {
 	fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s: <filename> [section]\n", os.Args[0])
 	flag.PrintDefaults()
-}
-
-// unpackConfigurationDump reads a configuration dump produced by "nginx -T" and extracts each file
-// separately; the returned map maps the name of the files in the configuration dump with their contents.
-// This function also supports reading a single configuration file, in which case its contents will be stored
-// in the special "__DEFAULT__" key.
-func unpackConfigurationDump(filename string) (map[string]string, error) {
-	fh, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer fh.Close()
-
-	contentMap := make(map[string]string)
-	current := defaultSection
-	var lines []string
-
-	r := bufio.NewReader(fh)
-
-Loop:
-	for {
-		line, err := r.ReadString('\n')
-		line = strings.ReplaceAll(line, "\r", "")
-		switch {
-		case errors.Is(err, io.EOF):
-			break Loop
-		case err != nil:
-			return nil, err
-		}
-
-		m := magicHeader.FindStringSubmatch(line)
-		switch {
-		case m == nil:
-			lines = append(lines, line)
-		case len(m) == 1:
-			return nil, fmt.Errorf("invalid magic header line: %q", line)
-		case len(m) > 1:
-			if len(lines) > 0 {
-				contentMap[current] = strings.Join(lines, "")
-			}
-			lines = nil
-			current = m[1]
-		}
-	}
-
-	contentMap[current] = strings.Join(lines, "")
-
-	return contentMap, nil
 }
 
 func run() error {
@@ -89,7 +35,7 @@ func run() error {
 		section = flag.Arg(1)
 	}
 
-	filesMap, err := unpackConfigurationDump(filename)
+	filesMap, err := parse.Unpack(filename)
 	if err != nil {
 		return err
 	}
@@ -111,7 +57,7 @@ func run() error {
 		}
 		return play(section, contents)
 	default:
-		contents, ok := filesMap[defaultSection]
+		contents, ok := filesMap[filename]
 		if !ok {
 			fmt.Printf("Available sections:\n")
 			for section, data := range filesMap {
@@ -119,7 +65,7 @@ func run() error {
 			}
 			return errors.New("a configuration dump was read but no section was specified")
 		}
-		return play(defaultSection, contents)
+		return play(filename, contents)
 	}
 
 	return nil
