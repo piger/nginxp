@@ -1,5 +1,7 @@
 # nginxp
 
+![go test](https://github.com/piger/nginxp/actions/workflows/go-test.yml/badge.svg)
+
 An experimental parser for the NGINX configuration format.
 
 A lot of this code is copied or inspired by Go's `text/template`; I'm not good at writing parsers.
