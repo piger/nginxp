@@ -111,10 +111,12 @@ func equal(i1, i2 []item, checkPos bool) bool {
 }
 
 func TestLex(t *testing.T) {
-	for _, test := range lexTests {
-		items := collect(&test)
-		if !equal(items, test.items, false) {
-			t.Errorf("%s: got\n\t%+v\nexpected\n\t%v", test.name, items, test.items)
-		}
+	for _, tt := range lexTests {
+		t.Run(tt.name, func(t *testing.T) {
+			items := collect(&tt)
+			if !equal(items, tt.items, false) {
+				t.Fatalf("expected:\n\t%+v\ngot:\n\t%+v", tt.items, items)
+			}
+		})
 	}
 }
